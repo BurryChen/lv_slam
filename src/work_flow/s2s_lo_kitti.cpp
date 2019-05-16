@@ -20,12 +20,14 @@
 using namespace Eigen;
 using namespace std;
 
-pcl::PointCloud<pcl::PointXYZI>::Ptr distance_filter(const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud,int distance_near_thresh, int distance_far_thresh) {
-    pcl::PointCloud<pcl::PointXYZI>::Ptr filtered(new pcl::PointCloud<pcl::PointXYZI>());
+typedef pcl::PointXYZI PointT;
+
+pcl::PointCloud<PointT>::Ptr distance_filter(const pcl::PointCloud<PointT>::Ptr& cloud,double distance_near_thresh, double distance_far_thresh) {
+    pcl::PointCloud<PointT>::Ptr filtered(new pcl::PointCloud<PointT>());
     filtered->reserve(cloud->size());
 
     std::copy_if(cloud->begin(), cloud->end(), std::back_inserter(filtered->points),
-      [&](const pcl::PointXYZI& p) {
+      [&](const PointT& p) {
         double d = p.getVector3fMap().norm();
         return d > distance_near_thresh && d < distance_far_thresh;
       }
@@ -64,19 +66,21 @@ int main(int argc, char** argv) {
   std::string res_dir=argv[1];
   std::string seq=argv[2];
   std::string pcdsdir="/media/whu/HD_CHEN_2T/02data/KITTI_odometry/velobag/velo_"+seq+".bag_pcd";
+  std::string calibdir="/media/whu/HD_CHEN_2T/02data/KITTI_odometry/dataset/sequences/"+seq+"/calib.txt";
   std::string gt_file="/home/whu/data/data_source_KITTI/devkit_old/cpp/data/poses/"+seq+".txt";
   std::string odom_file=res_dir+"/data/KITTI_"+seq+"_odom.txt";
   std::string scan_error_file=res_dir+"/errors/KITTI_"+seq+"_scan_error.txt";
   std::string odom_error_file=res_dir+"/errors/KITTI_"+seq+"_odom_error.txt";
+  ifstream fin ( calibdir );
+  string tmp;
+  for(int i=0;i<4;i++) getline(fin,tmp);
  
   // load ground truth file
   //世界坐标系map,以第一帧velo为基准建立，而kitti ground truth 是以第一帧camera为世界坐标系的velo pose，需要世界系calibration参数
-  Eigen::Matrix4d tf_velo2cam;
-  tf_velo2cam<<      
-     4.276802385584e-04, -9.999672484946e-01, -8.084491683471e-03,-1.198459927713e-02,
-    -7.210626507497e-03,  8.081198471645e-03, -9.999413164504e-01,-5.403984729748e-02, 
-     9.999738645903e-01,  4.859485810390e-04, -7.206933692422e-03,-2.921968648686e-01,
-      0,0,0,1;
+  Eigen::Matrix4d tf_velo2cam=Eigen::Matrix4d::Identity();
+  fin>>tmp>>tf_velo2cam(0,0)>>tf_velo2cam(0,1)>>tf_velo2cam(0,2)>>tf_velo2cam(0,3)
+  >>tf_velo2cam(1,0)>>tf_velo2cam(1,1)>>tf_velo2cam(1,2)>>tf_velo2cam(1,3)
+  >>tf_velo2cam(2,0)>>tf_velo2cam(2,1)>>tf_velo2cam(2,2)>>tf_velo2cam(2,3);
   vector<Eigen::Matrix4d> poses_cam,poses_velo;
   FILE *fp = fopen(gt_file.c_str(),"r");
   if (!fp) printf("Can't open gt_file!");
@@ -93,11 +97,11 @@ int main(int argc, char** argv) {
   fclose(fp);
     
   // downsampling&ndt configure 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud(new pcl::PointCloud<pcl::PointXYZ>());
-  pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::PointCloud<PointT>::Ptr target_cloud(new pcl::PointCloud<PointT>());
+  pcl::PointCloud<PointT>::Ptr source_cloud(new pcl::PointCloud<PointT>());
   
-  pcl::PointCloud<pcl::PointXYZ>::Ptr downsampled(new pcl::PointCloud<pcl::PointXYZ>());
-  pcl::VoxelGrid<pcl::PointXYZ> voxelgrid;
+  pcl::PointCloud<PointT>::Ptr downsampled(new pcl::PointCloud<PointT>());
+  pcl::VoxelGrid<PointT> voxelgrid;
   voxelgrid.setLeafSize(0.1f, 0.1f, 0.1f);
   
   voxelgrid.setInputCloud(target_cloud);
@@ -108,12 +112,12 @@ int main(int argc, char** argv) {
   voxelgrid.filter(*downsampled);
   *source_cloud = *downsampled;
   
-  pcl::PointCloud<pcl::PointXYZI>::Ptr distance_filted(new pcl::PointCloud<pcl::PointXYZI>());
+  pcl::PointCloud<PointT>::Ptr distance_filted(new pcl::PointCloud<PointT>());
   
   ros::Time::init(); 
   
   std::cout << "--- pcl::NDT_OMP ---" << std::endl;
-  pclomp::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ>::Ptr ndt_omp(new pclomp::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ>());
+  pclomp::NormalDistributionsTransform<PointT, PointT>::Ptr ndt_omp(new pclomp::NormalDistributionsTransform<PointT, PointT>());
   ndt_omp->setResolution(1.0);
   ndt_omp->setNumThreads(8);
   ndt_omp->setNeighborhoodSearchMethod(pclomp::DIRECT1);
@@ -121,7 +125,7 @@ int main(int argc, char** argv) {
   ndt_omp->setTransformationEpsilon(0.01);
   ndt_omp->setMaximumIterations(64);
   ndt_omp->setOulierRatio(0.55);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr matched(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::PointCloud<PointT>::Ptr matched(new pcl::PointCloud<PointT>());
 
   // pcd file
   chdir(pcdsdir.c_str());
@@ -135,6 +139,7 @@ int main(int argc, char** argv) {
   
   // match
   Eigen::Matrix4d tf_s2s=Eigen::Matrix4d::Identity();
+  tf_s2s(0,3)=1.5;
   Eigen::Matrix4d tf_s2s_cam=Eigen::Matrix4d::Identity();
   Eigen::Matrix4d odom=Eigen::Matrix4d::Identity();
   Eigen::Matrix4d tf_s2s_error=Eigen::Matrix4d::Identity();
@@ -171,10 +176,10 @@ int main(int argc, char** argv) {
     voxelgrid.filter(*downsampled);
     *source_cloud = *downsampled;
 
-  /*distance_filted=distance_filter(target_cloud,2,50);
-  *target_cloud = *distance_filted;
-  distance_filted=distance_filter(source_cloud,2,50);
-  *source_cloud=*distance_filted;*/
+    distance_filted=distance_filter(target_cloud,1,50);
+    *target_cloud = *distance_filted;
+    distance_filted=distance_filter(source_cloud,1,50);
+    *source_cloud=*distance_filted;
   
     
     ndt_omp->setInputTarget(target_cloud);

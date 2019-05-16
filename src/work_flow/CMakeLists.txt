@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 2.8.3)
 
+find_package( OpenCV )
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+
+set( G2O_LIBS 
+    g2o_core g2o_types_sba g2o_solver_csparse g2o_stuff g2o_csparse_extension 
+)
+
 # exe
 add_executable(match
   match.cpp
@@ -39,4 +46,10 @@ target_link_libraries(s2s_lvo_kitti
   ${PCL_LIBRARIES}
   ndt_omp
   ${Sophus_LIBRARIES}
+  ${OpenCV_LIBS} 
+  ${G2O_LIBS}
 )
+
+# direct_sparse
+add_executable( direct_sparse direct_sparse.cpp )
+target_link_libraries( direct_sparse ${OpenCV_LIBS} ${G2O_LIBS} )

@@ -6,7 +6,7 @@ echo "path_arg : $1"
 # 2.SLAM, write odom file
 
 #for seq in 00 01 02 03 04 05 06 07 08 09 10
-for seq in 04
+for seq in 01
 do
 
 logfile=${1}/data/${seq}.log
