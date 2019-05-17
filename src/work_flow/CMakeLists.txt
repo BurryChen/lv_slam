@@ -35,13 +35,13 @@ target_link_libraries(s2s_lo_kitti
   ${Sophus_LIBRARIES}
 )
 
-add_executable(s2s_lvo_kitti
-  s2s_lvo_kitti.cpp
+add_executable(s2k_lvo_kitti
+  s2k_lvo_kitti.cpp
 )
-add_dependencies(s2s_lvo_kitti
+add_dependencies(s2k_lvo_kitti
   ndt_omp
 )
-target_link_libraries(s2s_lvo_kitti
+target_link_libraries(s2k_lvo_kitti
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   ndt_omp

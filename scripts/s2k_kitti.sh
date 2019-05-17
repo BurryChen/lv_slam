@@ -13,16 +13,16 @@ logfile=${1}/data/${seq}.log
 echo $seq $logfile
 
 touch $logfile
-/home/whu/slam_ws/devel/lib/LVO/s2s_lvo_kitti $1 $seq >$logfile
+/home/whu/slam_ws/devel/lib/LVO/s2k_lvo_kitti $1 $seq >$logfile
 
-file_gt=/home/whu/data/loam_KITTI/gt/${seq}.txt
+file_gt=/home/whu/data/data_source_KITTI/gt/${seq}.txt
 file_odom=${1}/data/KITTI_${seq}_odom.txt
 file_pdf=${1}/data/KITTI_${seq}_odom.pdf
 evo_traj kitti $file_odom      --plot_mode=xz  --ref=$file_gt  --save_plot $file_pdf
 
 file_scan_error=${1}/errors/KITTI_${seq}_scan_error.txt
 file_pdf2=${1}/errors/KITTI_${seq}_scan_error.pdf
-evo_traj kitti $file_scan_error   --plot_mode=xz --save_plot $file_pdf2
+evo_traj kitti $file_scan_error   --plot_mode=yx --save_plot $file_pdf2
 
 done 
 
