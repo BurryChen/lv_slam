@@ -20,7 +20,25 @@ Path=gcc
 Type=GCC
 
 [Launch]
-Launch Configurations=Launch Configuration 1,Launch Configuration 2,Launch Configuration 3
+Launch Configurations=Launch Configuration 1,Launch Configuration 3,Launch Configuration 0
+
+[Launch][Launch Configuration 0]
+Configured Launch Modes=execute
+Configured Launchers=nativeAppLauncher
+Name=s2k_lvo_kitti
+Type=Native Application
+
+[Launch][Launch Configuration 0][Data]
+Arguments='/home/whu/data/lidar_odometry_kitti/KITTI_odom_2sk_lvo'  01
+Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x04\x00\x00\x00\x06\x00L\x00V\x00O\x00\x00\x00\x06\x00s\x00r\x00c\x00\x00\x00\x12\x00w\x00o\x00r\x00k\x00_\x00f\x00l\x00o\x00w\x00\x00\x00\x1a\x00s\x002\x00k\x00_\x00l\x00v\x00o\x00_\x00k\x00i\x00t\x00t\x00i)
+Dependency Action=Build
+EnvironmentGroup=
+Executable=file:///home/whu/slam_ws/src/LVO/
+External Terminal=konsole --noclose --workdir %workdir -e %exe
+Project Target=LVO,src,work_flow,s2k_lvo_kitti
+Use External Terminal=false
+Working Directory=
+isExecutable=false
 
 [Launch][Launch Configuration 1]
 Configured Launch Modes=execute
@@ -36,24 +54,6 @@ EnvironmentGroup=
 Executable=file:///home/whu/slam_ws/src/LVO/
 External Terminal=konsole --noclose --workdir %workdir -e %exe
 Project Target=LVO,src,work_flow,direct_sparse
-Use External Terminal=false
-Working Directory=
-isExecutable=false
-
-[Launch][Launch Configuration 2]
-Configured Launch Modes=execute
-Configured Launchers=nativeAppLauncher
-Name=s2s_lvo_kitti
-Type=Native Application
-
-[Launch][Launch Configuration 2][Data]
-Arguments='/home/whu/data/lidar_odometry_kitti/KITTI_odom_lvo'  01
-Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x04\x00\x00\x00\x06\x00L\x00V\x00O\x00\x00\x00\x06\x00s\x00r\x00c\x00\x00\x00\x12\x00w\x00o\x00r\x00k\x00_\x00f\x00l\x00o\x00w\x00\x00\x00\x1a\x00s\x002\x00s\x00_\x00l\x00v\x00o\x00_\x00k\x00i\x00t\x00t\x00i)
-Dependency Action=Build
-EnvironmentGroup=
-Executable=file:///home/whu/slam_ws/src/LVO/
-External Terminal=konsole --noclose --workdir %workdir -e %exe
-Project Target=LVO,src,work_flow,s2s_lvo_kitti
 Use External Terminal=false
 Working Directory=
 isExecutable=false

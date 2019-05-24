@@ -29,9 +29,12 @@ using namespace std;
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#include <lidar_odometry/direct_spase.hpp>
+#include <lidar_odometry/epipolar_geometry.hpp>
+
 using namespace cv;
 
-typedef pcl::PointXYZRGBL PointT;
+typedef pcl::PointXYZI PointT;
 
 pcl::PointCloud<PointT>::Ptr distance_filter(const pcl::PointCloud<PointT>::Ptr& cloud,double distance_near_thresh, double distance_far_thresh) {
     pcl::PointCloud<PointT>::Ptr filtered(new pcl::PointCloud<PointT>());
@@ -52,7 +55,7 @@ pcl::PointCloud<PointT>::Ptr distance_filter(const pcl::PointCloud<PointT>::Ptr&
     return filtered;
   }
   
-pcl::PointCloud<PointT>::Ptr label_filter(const pcl::PointCloud<PointT>::Ptr& cloud,cv::Mat label_img,Eigen::Matrix4d T,Eigen::Matrix3d K) {
+/*pcl::PointCloud<PointT>::Ptr label_filter(const pcl::PointCloud<PointT>::Ptr& cloud,cv::Mat label_img,Eigen::Matrix4d T,Eigen::Matrix3d K) {
     std::map<uint32_t, cv::Vec3b> label_rgb;
     label_rgb[7]=cv::Vec3b(128, 64,128);
     label_rgb[8]=cv::Vec3b(244, 35, 232);
@@ -108,7 +111,7 @@ pcl::PointCloud<PointT>::Ptr label_filter(const pcl::PointCloud<PointT>::Ptr& cl
     filtered->header = cloud->header;
     
     return filtered;
-  }
+}*/
   
 int pcdfilter(const struct dirent *filename)    //文件筛选器
 {
@@ -135,7 +138,7 @@ int main(int argc, char** argv) {
   std::string seq=argv[2];
   std::string pcdsdir="/media/whu/HD_CHEN_2T/02data/KITTI_odometry/velobag/velo_"+seq+".bag_pcd";
   std::string calibdir="/media/whu/HD_CHEN_2T/02data/KITTI_odometry/dataset/sequences/"+seq+"/calib.txt";
-  std::string imgsdir="/media/whu/HD_CHEN_2T/02data/KITTI_odometry/dataset/sequences/"+seq+"/image_2segmented_images_colored";
+  std::string imgsdir="/media/whu/HD_CHEN_2T/02data/KITTI_odometry/dataset/sequences/"+seq+"/image_2";
   std::string gt_file="/home/whu/data/data_source_KITTI/devkit_old/cpp/data/poses/"+seq+".txt";
   std::string odom_file=res_dir+"/data/KITTI_"+seq+"_odom.txt";
   std::string scan_error_file=res_dir+"/errors/KITTI_"+seq+"_scan_error.txt";
@@ -229,7 +232,7 @@ int main(int argc, char** argv) {
   pcl::PointCloud<PointT>::Ptr filtered,key;
   Eigen::Matrix4d tf_s2s,tf_s2k,key_pose;
   int key_id=0,key_interval=10;
-  for(int i= 0; i <n; i ++)
+  for(int i= 0; i <n; i++)
   {
     std::string pcd = namelist[i]->d_name;
     if(pcl::io::loadPCDFile<PointT>(pcd, *cloud)) {
@@ -270,20 +273,48 @@ int main(int argc, char** argv) {
     std::cout<<"tf_s2k by acculating s2s: \n"<<tf_s2k<<std::endl;
     tf_s2k_error=tf_s2k_gt_velo.inverse()*tf_s2k;
     
-    if(i%key_interval==0) {  
+    //std::cout<<"tf_s2k_gt_cam2: \n"<<tf_cam0tocam2*tf_s2k_gt*tf_cam0tocam2.inverse()<<std::endl;
+    
+    if(i%key_interval==0) {   
       reg_s2k->setInputSource(filtered); 
       reg_s2k->align(*matched, tf_s2k.cast<float>());
-      tf_s2k = reg_s2k->getFinalTransformation().cast<double>();
-      odom_velo= key_pose * tf_s2k;
+      tf_s2k = reg_s2k->getFinalTransformation().cast<double>();    
       std::cout<<"update tf_s2k per key_interval f: \n"<<tf_s2k<<std::endl;
+      
       tf_s2k_error=tf_s2k_gt_velo.inverse()*tf_s2k;
+      Sophus::SE3 SE3_Rt0(tf_s2k_error.block(0,0,3,3),tf_s2k_error.block(0,3,3,1));
+       
+      //refine roll/pitch with images
+      /*char temp[7],temp2[7];
+      sprintf(temp,"%06d",i-key_interval);
+      sprintf(temp2,"%06d",i);
+      //reg_direct_sparse(cloud,imgsdir+"/"+temp2+".png",imgsdir+"/"+temp+".png",tf_cam0tocam2*tf_velo2cam0,K,tf_s2k);
+      if(reg_epipolar_geometry(imgsdir+"/"+temp2+".png",imgsdir+"/"+temp+".png",tf_cam0tocam2*tf_velo2cam0,K,tf_s2k))
+      {
+	std::cout<<"tf_s2k_error_velo: "<<SE3_Rt0.log().transpose()<<std::endl; 
+	std::cout<<"update tf_s2k with reg_epipolar_geometry successfully: \n"<<tf_s2k<<std::endl;
+      }
+      else
+	std::cout<<"update tf_s2k with reg_epipolar_geometry unsuccessfully!"<<std::endl;*/
+  
+      //俯仰角设为0
+      /*if(0){
+      Sophus::SE3 SE3_s2k(tf_s2k.block(0,0,3,3),tf_s2k.block(0,3,3,1));
+      Eigen::Matrix<double, 6, 1> p=SE3_s2k.log();
+      p(4,0)=0;
+      tf_s2k=Sophus::SE3::exp(p).matrix();
+      std::cout<<"update tf_s2k (pitch=0): \n"<<tf_s2k<<std::endl;
+      }*/
+      
+      tf_s2k_error=tf_s2k_gt_velo.inverse()*tf_s2k;
+      odom_velo= key_pose * tf_s2k;
       
       key=filtered;
       reg_s2k->setInputTarget(key);   
       key_id=i;
       tf_s2k.setIdentity();
       key_pose=odom_velo;
-    }  
+    }
     
     //elevation
     Sophus::SE3 SE3_Rt(tf_s2k_error.block(0,0,3,3),tf_s2k_error.block(0,3,3,1));
@@ -301,25 +332,7 @@ int main(int argc, char** argv) {
     fprintf(fp_scan_error,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
 	    tf_s2k_error(0,0),tf_s2k_error(0,1),tf_s2k_error(0,2),tf_s2k_error(0,3),
 	    tf_s2k_error(1,0),tf_s2k_error(1,1),tf_s2k_error(1,2),tf_s2k_error(1,3),
-	    tf_s2k_error(2,0),tf_s2k_error(2,1),tf_s2k_error(2,2),tf_s2k_error(2,3));
-    
-    //refine with label  
-    /*char temp[7];
-    sprintf(temp,"%06d",i+step);
-    string temp2=imgsdir+"/"+temp+".png";
-    source_color= cv::imread ( temp2 ,1);
-    if ( source_color.data==nullptr )
-      continue;   
-    pc_filted=label_filter(source_cloud,source_color,tf_cam0tocam2*tf_velo2cam0,K);
-    *source_cloud=*pc_filted;
-  
-    sprintf(temp,"%06d",i);
-    temp2=imgsdir+"/"+temp+".png";
-    color= cv::imread ( temp2 ,1);
-    if ( color.data==nullptr )
-      continue; 
-    pc_filted=label_filter(target_cloud,color,tf_cam0tocam2*tf_velo2cam0,K);
-    *target_cloud = *pc_filted;*/
+	    tf_s2k_error(2,0),tf_s2k_error(2,1),tf_s2k_error(2,2),tf_s2k_error(2,3));   
   
   }
   fclose(fp_odom);
