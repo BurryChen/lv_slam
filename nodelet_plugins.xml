@@ -5,3 +5,7 @@
 <library path="lib/libprefiltering_nodelet">
   <class name="lidar_odometry/PrefilteringNodelet" type="lidar_odometry::PrefilteringNodelet" base_class_type="nodelet::Nodelet" />
 </library>
+
+<library path="lib/libground_filter_nodelet">
+  <class name="lidar_odometry/GroundFilterNodelet" type="lidar_odometry::GroundFilterNodelet" base_class_type="nodelet::Nodelet" />
+</library>

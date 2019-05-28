@@ -21,6 +21,9 @@
   <!-- in case you use velodyne_driver, comment out the following line -->
   <node pkg="nodelet" type="nodelet" name="$(arg nodelet_manager)" args="manager" output="screen"/>
 
+  <!-- ground_filter_nodelet--> 
+  <node pkg="nodelet" type="nodelet" name="ground_filter_nodelet" args="load lidar_odometry/GroundFilterNodelet $(arg nodelet_manager)"/>  
+      
   <!-- prefiltering_nodelet -->
   <node pkg="nodelet" type="nodelet" name="prefiltering_nodelet" args="load lidar_odometry/PrefilteringNodelet $(arg nodelet_manager)">
   	<!-- in case base_link_frame is blank, mapping will be performed in the lidar frame -->
@@ -63,4 +66,10 @@
       <param name="ndt_nn_search_method" value="DIRECT1" />  <!--DIRECT1 快,KDTREE可能更准，不选DIRECT7-->
   </node>
 
+  <!--
+  <group if="$(arg rviz)">
+    <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find hdl_graph_slam)/rviz/hdl_graph_slam2.rviz" />
+  </group>
+  -->
+  
 </launch>

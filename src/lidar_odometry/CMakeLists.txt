@@ -20,4 +20,11 @@ target_link_libraries(scan_matching_odometry_nodelet
   ndt_omp
 )
 
-
+add_library(ground_filter_nodelet
+  ground_filter_nodelet.cpp
+)
+target_link_libraries(ground_filter_nodelet
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)
+add_dependencies(ground_filter_nodelet ${PROJECT_NAME}_gencpp)
