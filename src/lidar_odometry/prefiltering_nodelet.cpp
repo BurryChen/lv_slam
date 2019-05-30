@@ -31,7 +31,7 @@ public:
 
     initialize_params();
 
-    points_sub = nh.subscribe("/filtered_points_no_ground", 128, &PrefilteringNodelet::cloud_callback, this);
+    points_sub = nh.subscribe("/velodyne_points", 128, &PrefilteringNodelet::cloud_callback, this);
     points_pub = nh.advertise<sensor_msgs::PointCloud2>("/filtered_points", 128);
   }
 
@@ -87,7 +87,11 @@ private:
     base_link_frame = private_nh.param<std::string>("base_link_frame", "");
   }
 
-  void cloud_callback(pcl::PointCloud<PointT>::ConstPtr src_cloud) {
+  //void cloud_callback(pcl::PointCloud<PointT>::ConstPtr src_cloud)
+  void cloud_callback(const sensor_msgs::PointCloud2ConstPtr &in_cloud_ptr)
+  {
+    pcl::PointCloud<PointT>::Ptr src_cloud(new pcl::PointCloud<PointT>);
+    pcl::fromROSMsg(*in_cloud_ptr, *src_cloud);
     if(src_cloud->empty()) {
       return;
     }
@@ -113,7 +117,11 @@ private:
     filtered = downsample(filtered);
     filtered = outlier_removal(filtered);
 
-    points_pub.publish(filtered);
+    //points_pub.publish(filtered);
+    sensor_msgs::PointCloud2 cloud_msg;
+    pcl::toROSMsg(*filtered, cloud_msg);
+    cloud_msg.header = in_cloud_ptr->header;
+    points_pub.publish(cloud_msg);
   }
 
   pcl::PointCloud<PointT>::ConstPtr downsample(const pcl::PointCloud<PointT>::ConstPtr& cloud) const {

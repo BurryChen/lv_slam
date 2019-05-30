@@ -28,3 +28,12 @@ target_link_libraries(ground_filter_nodelet
   ${PCL_LIBRARIES}
 )
 add_dependencies(ground_filter_nodelet ${PROJECT_NAME}_gencpp)
+
+add_library(scan_matching_odom_nodelet
+  scan_matching_odom_nodelet.cpp
+)
+target_link_libraries(scan_matching_odom_nodelet
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  ndt_omp
+)

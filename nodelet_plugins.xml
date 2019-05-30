@@ -9,3 +9,7 @@
 <library path="lib/libground_filter_nodelet">
   <class name="lidar_odometry/GroundFilterNodelet" type="lidar_odometry::GroundFilterNodelet" base_class_type="nodelet::Nodelet" />
 </library>
+
+<library path="lib/libscan_matching_odom_nodelet">
+  <class name="lidar_odometry/ScanMatchingOdomNodelet" type="lidar_odometry::ScanMatchingOdomNodelet" base_class_type="nodelet::Nodelet" />
+</library>
