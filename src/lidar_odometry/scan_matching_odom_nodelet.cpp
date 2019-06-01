@@ -68,6 +68,11 @@ private:
     auto& pnh = private_nh;
     odom_frame_id = pnh.param<std::string>("odom_frame_id", "odom");
     
+    // If this value is zero, frames are always compared with the previous frame
+    keyframe_delta_trans = pnh.param<double>("keyframe_delta_trans", 5);
+    keyframe_delta_angle = pnh.param<double>("keyframe_delta_angle", 0.17);
+    keyframe_delta_time = pnh.param<double>("keyframe_delta_time", 1.0);
+    
     // load calib /ground truth file and build output file
     string res_dir = pnh.param<std::string>("res_dir", "/home/whu/data/ndt_odom_KITTI");
     string seq = pnh.param<std::string>("seq", "04");
@@ -86,7 +91,7 @@ private:
     >>tf_velo2cam(2,0)>>tf_velo2cam(2,1)>>tf_velo2cam(2,2)>>tf_velo2cam(2,3);
     
     FILE *fp = fopen(gt_file.c_str(),"r");
-    if (!fp) printf("Can't open gt_file!");
+    if (fp) {
     while (!feof(fp)) {
       Eigen::Matrix4d p=Eigen::Matrix4d::Identity();
       if (fscanf(fp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
@@ -98,6 +103,7 @@ private:
       }
     }
     fclose(fp);
+    }  
   
     //registration parameters
     std::cout << "--- reg_s2s,reg_s2k=pcl::NDT_OMP ---" << std::endl;
@@ -148,7 +154,7 @@ private:
     pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>());
     pcl::fromROSMsg(*cloud_msg, *cloud);
 
-    Eigen::Matrix4d pose = matching(cloud_msg->header.stamp, cloud);//base系在odom系下的变换（odom=第一帧keyframe的base）
+    Eigen::Matrix4d pose = matching_s2k(cloud_msg->header.stamp, cloud);//base系在odom系下的变换（odom=第一帧keyframe的base）
     publish_odometry(cloud_msg->header.stamp, cloud_msg->header.frame_id, pose);
     scan_count++;
     
@@ -199,7 +205,7 @@ private:
    * @param cloud  the input cloud
    * @return the relative pose between the input cloud and the first keyframe cloud (odometry)
    */
-  Eigen::Matrix4d matching(const ros::Time& stamp, const pcl::PointCloud<PointT>::ConstPtr& cloud) {
+  Eigen::Matrix4d matching_s2k_bys2s(const ros::Time& stamp, const pcl::PointCloud<PointT>::ConstPtr& cloud) {
     filtered=cloud;
     if(scan_count==0)
     {
@@ -211,6 +217,7 @@ private:
       key_id=scan_count;
       tf_s2k.setIdentity();
       key_pose.setIdentity();
+      keyframe_stamp=stamp;
       last_t = ros::WallTime::now();
       return Eigen::Matrix4d::Identity();
     }
@@ -227,28 +234,35 @@ private:
     tf_s2k=tf_s2k*tf_s2s;
     odom_velo = key_pose * tf_s2k;
     
-    Eigen::Matrix4d tf_s2k_gt=poses_cam[key_id].inverse()*poses_cam[scan_count];
+    Eigen::Matrix4d tf_s2k_gt=Eigen::Matrix4d::Identity();
+    if(poses_cam.size()!=0)tf_s2k_gt=poses_cam[key_id].inverse()*poses_cam[scan_count];
     Eigen::Matrix4d tf_s2k_gt_velo=tf_velo2cam.inverse()*tf_s2k_gt*tf_velo2cam;
     std::cout<<"tf_s2k_gt_velo: \n"<<tf_s2k_gt_velo<<std::endl;
-    std::cout<<"tf_s2k by acculating s2s: \n"<<tf_s2k<<std::endl;
+    std::cout<<"tf_s2k by pre_tf_s2k*tf_s2s: \n"<<tf_s2k<<std::endl;
     tf_s2k_error=tf_s2k_gt_velo.inverse()*tf_s2k;
     
-    if(scan_count%key_interval==0) {   
-      reg_s2k.setInputSource(filtered); 
-      reg_s2k.align(*matched, tf_s2k.cast<float>());
-      tf_s2k = reg_s2k.getFinalTransformation().cast<double>();    
-      std::cout<<"update tf_s2k per key_interval f: \n"<<tf_s2k<<std::endl;
+    reg_s2k.setInputSource(filtered); 
+    reg_s2k.align(*matched, tf_s2k.cast<float>());
+    tf_s2k = reg_s2k.getFinalTransformation().cast<double>();    
+    std::cout<<"update tf_s2k per key_interval f: \n"<<tf_s2k<<std::endl;
        
-      //refine
-      
-      tf_s2k_error=tf_s2k_gt_velo.inverse()*tf_s2k;
-      odom_velo= key_pose * tf_s2k;
-      
+    //refine    
+    tf_s2k_error=tf_s2k_gt_velo.inverse()*tf_s2k;
+    odom_velo= key_pose * tf_s2k;
+           
+    //delta between current scan and keyframe
+    double dx_s2k = tf_s2k.block<3, 1>(0, 3).norm();
+    double da_s2k = 2*std::acos(Eigen::Quaternionf(tf_s2k.block<3, 3>(0, 0).cast<float>()).w());
+    double dt_s2k = (stamp - keyframe_stamp).toSec();
+    std::cout<<dx_s2k<<" "<<da_s2k<<" "<<dt_s2k<<std::endl;
+    if(dx_s2k > keyframe_delta_trans || da_s2k > keyframe_delta_angle || dt_s2k > keyframe_delta_time) {    
+    //if(scan_count%key_interval==0) {    
       key=filtered;
       reg_s2k.setInputTarget(key);   
       key_id=scan_count;
       tf_s2k.setIdentity();
       key_pose=odom_velo;
+      keyframe_stamp=stamp;
     }
     
     //elevation
@@ -257,17 +271,20 @@ private:
     
     //output
     Eigen::Matrix4d odom=tf_velo2cam*odom_velo*tf_velo2cam.inverse();
-    Eigen::Matrix4d odom_error=poses_cam[scan_count].inverse()*odom;
-    Sophus::SE3 SE3_Rt2(odom_error.block(0,0,3,3),odom_error.block(0,3,3,1));
-    std::cout<<"odom_error_cam: "<<SE3_Rt2.log().transpose()<<std::endl;  
     fprintf(fp_odom,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
 	    odom(0,0),odom(0,1),odom(0,2),odom(0,3),
 	    odom(1,0),odom(1,1),odom(1,2),odom(1,3),
 	    odom(2,0),odom(2,1),odom(2,2),odom(2,3));
+    
+    if(poses_cam.size()!=0){
+    Eigen::Matrix4d odom_error=poses_cam[scan_count].inverse()*odom;
+    Sophus::SE3 SE3_Rt2(odom_error.block(0,0,3,3),odom_error.block(0,3,3,1));
+    std::cout<<"odom_error_cam: "<<SE3_Rt2.log().transpose()<<std::endl;  
     fprintf(fp_scan_error,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
 	    tf_s2k_error(0,0),tf_s2k_error(0,1),tf_s2k_error(0,2),tf_s2k_error(0,3),
 	    tf_s2k_error(1,0),tf_s2k_error(1,1),tf_s2k_error(1,2),tf_s2k_error(1,3),
-	    tf_s2k_error(2,0),tf_s2k_error(2,1),tf_s2k_error(2,2),tf_s2k_error(2,3));   
+	    tf_s2k_error(2,0),tf_s2k_error(2,1),tf_s2k_error(2,2),tf_s2k_error(2,3));
+    }
  
     //screet print 
     auto t2 = ros::WallTime::now();
@@ -277,6 +294,100 @@ private:
     return odom;
   }
 
+   /**
+   * @brief estimate the relative pose between an input cloud and the first keyframe cloud (odometry)
+   *        matching between current scan and last scan
+   * @param stamp  the timestamp of the input cloud
+   * @param cloud  the input cloud
+   * @return the relative pose between the input cloud and the first keyframe cloud (odometry)
+   */
+  Eigen::Matrix4d matching_s2k(const ros::Time& stamp, const pcl::PointCloud<PointT>::ConstPtr& cloud) {
+    filtered=cloud;
+    if(scan_count==0)
+    {    
+      key=filtered;
+      reg_s2k.setInputTarget(key);
+      key_id=scan_count;
+      guess_trans.setIdentity();
+      guess_trans(0,3)=1.5;
+      pre_tf_s2k.setIdentity();
+      key_pose.setIdentity();
+      keyframe_stamp=stamp;
+      last_t = ros::WallTime::now();
+      return Eigen::Matrix4d::Identity();
+    }
+    
+    pcl::PointCloud<PointT>::Ptr matched(new pcl::PointCloud<PointT>());
+    
+    //s2k
+    std::cout << std::endl<<scan_count<<" to "<<key_id<<"  "<< std::endl;
+    
+    Eigen::Matrix4d tf_s2k_gt=Eigen::Matrix4d::Identity();
+    if(poses_cam.size()!=0)tf_s2k_gt=poses_cam[key_id].inverse()*poses_cam[scan_count];
+    Eigen::Matrix4d tf_s2k_gt_velo=tf_velo2cam.inverse()*tf_s2k_gt*tf_velo2cam;
+    std::cout<<"tf_s2k_gt_velo: \n"<<tf_s2k_gt_velo<<std::endl;
+    std::cout<<"guess_trans: \n"<<guess_trans<<std::endl;
+    
+    reg_s2k.setInputSource(filtered); 
+    reg_s2k.align(*matched, guess_trans.cast<float>());
+    tf_s2k = reg_s2k.getFinalTransformation().cast<double>(); 
+    if(scan_count==1)
+    {
+      reg_s2k.align(*matched, tf_s2k.cast<float>());
+      tf_s2k = reg_s2k.getFinalTransformation().cast<double>(); 
+    }
+    std::cout<<"tf_s2k with reg_s2k: \n"<<tf_s2k<<std::endl;
+    
+    tf_s2s=pre_tf_s2k.inverse()*tf_s2k;
+    //refine    
+    tf_s2k_error=tf_s2k_gt_velo.inverse()*tf_s2k;
+    odom_velo= key_pose * tf_s2k;
+           
+    //delta between current scan and keyframe
+    double dx_s2k = tf_s2k.block<3, 1>(0, 3).norm();
+    double da_s2k = 2*std::acos(Eigen::Quaternionf(tf_s2k.block<3, 3>(0, 0).cast<float>()).w());
+    double dt_s2k = (stamp - keyframe_stamp).toSec();
+    std::cout<<dx_s2k<<" "<<da_s2k<<" "<<dt_s2k<<std::endl;
+    if(dx_s2k > keyframe_delta_trans || da_s2k > keyframe_delta_angle || dt_s2k > keyframe_delta_time) {    
+    //if(scan_count%key_interval==0) {    
+      key=filtered;
+      reg_s2k.setInputTarget(key);   
+      key_id=scan_count;
+      tf_s2k.setIdentity();
+      key_pose=odom_velo;
+      keyframe_stamp=stamp;
+    }
+    pre_tf_s2k=tf_s2k;
+    guess_trans=pre_tf_s2k*tf_s2s;
+    
+    //elevation
+    Sophus::SE3 SE3_Rt(tf_s2k_error.block(0,0,3,3),tf_s2k_error.block(0,3,3,1));
+    std::cout<<"tf_s2k_error_velo: "<<SE3_Rt.log().transpose()<<std::endl;  
+    
+    //output
+    Eigen::Matrix4d odom=tf_velo2cam*odom_velo*tf_velo2cam.inverse();
+    fprintf(fp_odom,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
+	    odom(0,0),odom(0,1),odom(0,2),odom(0,3),
+	    odom(1,0),odom(1,1),odom(1,2),odom(1,3),
+	    odom(2,0),odom(2,1),odom(2,2),odom(2,3));
+    
+    if(poses_cam.size()!=0){
+    Eigen::Matrix4d odom_error=poses_cam[scan_count].inverse()*odom;
+    Sophus::SE3 SE3_Rt2(odom_error.block(0,0,3,3),odom_error.block(0,3,3,1));
+    std::cout<<"odom_error_cam: "<<SE3_Rt2.log().transpose()<<std::endl;  
+    fprintf(fp_scan_error,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
+	    tf_s2k_error(0,0),tf_s2k_error(0,1),tf_s2k_error(0,2),tf_s2k_error(0,3),
+	    tf_s2k_error(1,0),tf_s2k_error(1,1),tf_s2k_error(1,2),tf_s2k_error(1,3),
+	    tf_s2k_error(2,0),tf_s2k_error(2,1),tf_s2k_error(2,2),tf_s2k_error(2,3));
+    }
+ 
+    //screet print 
+    auto t2 = ros::WallTime::now();
+    std::cout << "--t: "<< (t2 - last_t).toSec() <<std::endl;
+    last_t=t2;
+    
+    return odom;
+  }
       /**
    * @brief estimate the relative pose between an input cloud and the first keyframe cloud (odometry)
    *        matching between current scan and last scan
@@ -417,6 +528,11 @@ private:
   std::string odom_frame_id;
   ros::Publisher read_until_pub;
 
+  // keyframe parameters
+  double keyframe_delta_trans;  // minimum distance between keyframes
+  double keyframe_delta_angle;  //
+  double keyframe_delta_time;   //
+  
   // odometry calculation
   Eigen::Matrix4d prev_trans;                  // previous estimated transform from keyframe
   Eigen::Matrix4d keyframe_pose;               // keyframe pose
@@ -437,7 +553,7 @@ private:
   Eigen::Matrix4d guess_trans;                  //init guess for mathing
   int scan_count,key_id,key_interval;
   pcl::PointCloud<PointT>::ConstPtr filtered,key;
-  Eigen::Matrix4d tf_s2s,tf_s2k,key_pose;
+  Eigen::Matrix4d tf_s2s,tf_s2k,key_pose,pre_tf_s2k;
   Eigen::Matrix4d odom_velo,tf_s2k_error;
   vector<Eigen::Matrix4d> poses_cam,poses_velo;
 };

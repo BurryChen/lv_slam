@@ -21,9 +21,10 @@
   <!-- in case you use velodyne_driver, comment out the following line -->
   <node pkg="nodelet" type="nodelet" name="$(arg nodelet_manager)" args="manager" output="screen"/>
 
-  <!-- ground_filter_nodelet--> 
+  <!-- ground_filter_nodelet 
   <node pkg="nodelet" type="nodelet" name="ground_filter_nodelet" args="load lidar_odometry/GroundFilterNodelet $(arg nodelet_manager)"/>  
-      
+  -->
+  
   <!-- prefiltering_nodelet -->
   <node pkg="nodelet" type="nodelet" name="prefiltering_nodelet" args="load lidar_odometry/PrefilteringNodelet $(arg nodelet_manager)">
   	<!-- in case base_link_frame is blank, mapping will be performed in the lidar frame -->
@@ -49,6 +50,9 @@
       <param name="odom_frame_id" value="odom" />     
       <param name="res_dir" type="string" value="$(arg res_dir)" /> 
       <param name="seq" type="string" value="$(arg seq)" /> 
+      <param name="keyframe_delta_trans" value="5.0" />       <!--m-->
+      <param name="keyframe_delta_angle" value="0.17" />      <!--0.17=rad 10°-->
+      <param name="keyframe_delta_time" value="1.0" />        <!--s,当前帧选取作为关键帧的条件-->
   </node>
 
   <!--

@@ -12,6 +12,7 @@
 #include <pcl/conversions.h>
 #include <pcl_ros/transforms.h>
 #include <pcl/filters/extract_indices.h>
+#include <pcl/common//geometry.h>
 
 #include <sensor_msgs/PointCloud2.h>
 
@@ -41,13 +42,14 @@ public:
   {
     nh = getNodeHandle();
     sub_point_cloud_ = nh.subscribe("/velodyne_points", 128, &GroundFilterNodelet::point_callback, this);
-    pub_ground_ = nh.advertise<sensor_msgs::PointCloud2>("/filtered_points_ground", 128);
-    pub_no_ground_ = nh.advertise<sensor_msgs::PointCloud2>("/filtered_points_no_ground", 128);
+    pub_ground_ = nh.advertise<sensor_msgs::PointCloud2>("/seg_points_ground", 128);
+    pub_no_ground_ = nh.advertise<sensor_msgs::PointCloud2>("/seg_points_no_ground", 128);
+    pub_patched_ = nh.advertise<sensor_msgs::PointCloud2>("/patched_points", 128);
   }
 
 private:
   ros::Subscriber sub_point_cloud_;
-  ros::Publisher pub_ground_, pub_no_ground_;
+  ros::Publisher pub_ground_, pub_no_ground_,pub_patched_;
   ros::NodeHandle nh;
   ros::NodeHandle private_nh;
 
@@ -62,6 +64,7 @@ private:
     size_t concentric_div; //index of the concentric division to which this points belongs to
 
     size_t original_index; //index of this point in the source pointcloud
+    bool is_ground;       
   };
   typedef std::vector<PointXYZIRTColor> PointCloudXYZIRTColor;
 
@@ -237,11 +240,13 @@ void classify_pc(std::vector<PointCloudXYZIRTColor> &in_radial_ordered_clouds,
             {
                 out_ground_indices.indices.push_back(in_radial_ordered_clouds[i][j].original_index);
                 prev_ground = true;
+		in_radial_ordered_clouds[i][j].is_ground=true;
             }
             else
             {
                 out_no_ground_indices.indices.push_back(in_radial_ordered_clouds[i][j].original_index);
                 prev_ground = false;
+		in_radial_ordered_clouds[i][j].is_ground=false;
             }
 
             prev_radius = in_radial_ordered_clouds[i][j].radius;
@@ -249,6 +254,38 @@ void classify_pc(std::vector<PointCloudXYZIRTColor> &in_radial_ordered_clouds,
         }
     }
 }
+
+/*!
+ * Classifies Points in the PointCoud as Ground and Not Ground
+ * @param in_radial_ordered_clouds Vector of an Ordered PointsCloud ordered by radial distance from the origin with is_ground
+ * @param out_patched_points Returns the patched ground cloud
+ */
+void patch_ground(std::vector<PointCloudXYZIRTColor> &in_radial_ordered_clouds,const pcl::PointCloud<pcl::PointXYZI>::Ptr &out_patched_ground_cloud)
+{
+  #pragma omp for
+    for (size_t i = 0; i < in_radial_ordered_clouds.size(); i++) //sweep through each radial division 遍历每一根射线
+    {
+        for (size_t j = 0; j < in_radial_ordered_clouds[i].size()-1; j++) //loop through each point in the radial div
+        {
+	  PointXYZIRTColor p1=in_radial_ordered_clouds[i][j];
+	  PointXYZIRTColor p2=in_radial_ordered_clouds[i][j+1];
+	  Eigen::Vector3f detal(p2.point.x-p1.point.x,p2.point.y-p1.point.y,p2.point.z-p1.point.z);
+	  int n= detal.norm()/0.3;
+	  if(p1.is_ground &&p2.is_ground&& n>1&&n<30&& p2.radius<50)
+	  {
+	    pcl::PointXYZI point;
+	    for(int k=1;k<n;k++)
+	    {    
+	    point.x=p1.point.x+k*detal(0,0)/n;
+	    point.y=p1.point.y+k*detal(1,0)/n;
+	    point.z=p1.point.z+k*detal(2,0)/n;
+	    out_patched_ground_cloud->push_back(point);
+	    }
+	  }
+	}
+    } 
+}
+
 
 void publish_cloud(const ros::Publisher &in_publisher,
                                 const pcl::PointCloud<pcl::PointXYZI>::Ptr in_cloud_to_publish_ptr,
@@ -298,7 +335,12 @@ void point_callback(const sensor_msgs::PointCloud2ConstPtr &in_cloud_ptr)
 
     extract_ground.setNegative(true); //true removes the indices, false leaves only the indices
     extract_ground.filter(*no_ground_cloud_ptr);
+    
+    pcl::PointCloud<pcl::PointXYZI>::Ptr patched_cloud_ptr(new pcl::PointCloud<pcl::PointXYZI>);
+    *patched_cloud_ptr=*current_pc_ptr;
+    //patch_ground(radial_ordered_clouds,patched_cloud_ptr);
 
+    //std::cout<<patched_cloud_ptr->size()-current_pc_ptr->size()<<std::endl;
     //////pub for debug
     // sensor_msgs::PointCloud2 pub_pc;
     // pcl::toROSMsg(*remove_close, pub_pc);
@@ -309,6 +351,7 @@ void point_callback(const sensor_msgs::PointCloud2ConstPtr &in_cloud_ptr)
 
     publish_cloud(pub_ground_, ground_cloud_ptr, in_cloud_ptr->header);
     publish_cloud(pub_no_ground_, no_ground_cloud_ptr, in_cloud_ptr->header);
+    //publish_cloud(pub_patched_, patched_cloud_ptr, in_cloud_ptr->header);
 }
 };
 
