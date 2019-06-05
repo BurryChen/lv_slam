@@ -150,6 +150,13 @@ int main(int argc, char** argv) {
   std::cout<<"tf_s2s: \n"<<tf_s2s<<std::endl;
   std::cout<<"tf_s2s_cam: \n"<<tf_s2s_cam<<std::endl;
   
+  pclomp::GeneralizedIterativeClosestPoint<pcl::PointXYZI, pcl::PointXYZI> gicp;
+  gicp.setInputSource(source_cloud);
+  gicp.setInputTarget(target_cloud);
+  gicp.align(*matched,guess);    
+
+  std::cout <<"tf_gicp=\n"<< gicp.getFinalTransformation() << std::endl;
+  
   // Saving transformed input cloud.
   pcl::io::savePCDFileASCII ("matched.pcd", *matched);
   // visulization

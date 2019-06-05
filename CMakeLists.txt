@@ -73,6 +73,7 @@ include_directories(
 ## 1.ndt_omp(lib) ##
 ####################
 add_subdirectory(src/ndt_omp)
+add_subdirectory(src/ndt_pca)
 
 #############################
 ## 2.lidar_odometry(lib&exe) ##

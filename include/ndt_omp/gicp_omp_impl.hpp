@@ -1,3 +1,4 @@
+#include "gicp_omp.h"
 /*
  * Software License Agreement (BSD License)
  *
