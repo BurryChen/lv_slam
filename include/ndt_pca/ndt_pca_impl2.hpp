@@ -42,6 +42,8 @@
  AngleAxisd (Rotation Vector) replaces Eulur Angle with a matrix Lie group approach.
  2019.06.03
  Spherical Grid; Sample with Transform Contribution
+ 2019.06.10
+ Weight
  ***********************************************************************************/
 
 #ifndef PCL_REGISTRATION_NDT_PCA_IMPL_H_
@@ -261,8 +263,8 @@ pclpca::NormalDistributionsTransform<PointSource, PointTarget>::computeDerivativ
 			target_cells_.getNeighborhoodAtPoint7(x_trans_pt, neighborhood);
 			break;
 		case DIRECT1:
-			//target_cells_.getNeighborhoodAtPoint1(x_trans_pt, neighborhood);
-			target_cells_.getNeighborhoodAtPoint1_Spherical(x_trans_pt, neighborhood);
+			target_cells_.getNeighborhoodAtPoint1(x_trans_pt, neighborhood);
+			//target_cells_.getNeighborhoodAtPoint1_Spherical(x_trans_pt, neighborhood);
 			break;
 		}
 
@@ -290,8 +292,8 @@ pclpca::NormalDistributionsTransform<PointSource, PointTarget>::computeDerivativ
 			// Update score, gradient and hessian, lines 19-21 in Algorithm 2, according to Equations 6.10, 6.12 and 6.13, respectively [Magnusson 2009]
 			score_pt += updateDerivatives(score_gradient_pt, hessian_pt, point_gradient_, point_hessian_, x_trans, c_inv, compute_hessian);
 			//加权
-			//double weight=static_cast<double> (cell->nr_points)/static_cast<double> (target_cells_.max_points_all_voxels_);
-			//score_pt*=weight;score_gradient_pt*=weight;hessian_pt*=weight;  
+			double weight=cell->getDimension2d();
+			score_pt*=weight;score_gradient_pt*=weight;hessian_pt*=weight;  
 		}
 
 		scores[thread_n] += score_pt;

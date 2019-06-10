@@ -27,11 +27,13 @@ add_executable(s2s_lo_kitti
 )
 add_dependencies(s2s_lo_kitti
   ndt_omp
+  ndt_pca
 )
 target_link_libraries(s2s_lo_kitti
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   ndt_omp
+  ndt_pca
   ${Sophus_LIBRARIES}
 )
 

@@ -36,4 +36,5 @@ target_link_libraries(scan_matching_odom_nodelet
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   ndt_omp
+  ndt_pca
 )

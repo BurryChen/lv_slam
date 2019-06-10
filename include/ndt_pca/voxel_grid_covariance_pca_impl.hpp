@@ -371,15 +371,32 @@ pclpca::VoxelGridCovariance<PointT>::applyFilter (PointCloud &output)
       std::ptrdiff_t d;
       leaf.dimension_features_.maxCoeff(&d);
       leaf.dimension_label_=d+1;
-      
-      /*if(leaf.dimension_label==1)eigen_val(0,0)=eigen_val(1,1)=min_covar_eigvalue;
-      else if(leaf.dimension_label==2)
+       
+      //
+      double a2_2d=pow((sigam(1)-sigam(0))/sigam(2),2);
+      Eigen::Vector3d normal(leaf.evecs_(0,0),leaf.evecs_(1,0),leaf.evecs_(2,0));
+      normal.normalize();
+      Eigen::Vector3d mean_cross_normal=leaf.mean_.cross(normal);
+
+      //if(a2_2d<1e-5)
+      if(a2_2d<0)
       {
-	eigen_val(0,0)=min_covar_eigvalue;	
+	leaf.nr_points = -1;
       }
-      leaf.cov_ = leaf.evecs_ * eigen_val * leaf.evecs_.inverse ();*/
-      //if (searchable_&&leaf.dimension_label==3)
-      //  voxel_centroids_leaf_indices_.pop_back();
+     
+      leaf.transform_contribution_[0]= a2_2d*mean_cross_normal.dot(Eigen::Vector3d::UnitX());
+      leaf.transform_contribution_[1]=-a2_2d*mean_cross_normal.dot(Eigen::Vector3d::UnitX());
+      leaf.transform_contribution_[2]=a2_2d*mean_cross_normal.dot(Eigen::Vector3d::UnitY());
+      leaf.transform_contribution_[3]=-a2_2d*mean_cross_normal.dot(Eigen::Vector3d::UnitY());
+      leaf.transform_contribution_[4]=a2_2d*mean_cross_normal.dot(Eigen::Vector3d::UnitZ());
+      leaf.transform_contribution_[5]=-a2_2d*mean_cross_normal.dot(Eigen::Vector3d::UnitZ());
+      leaf.transform_contribution_[6]=a2_2d*std::fabs(normal.dot(Eigen::Vector3d::UnitX()));
+      leaf.transform_contribution_[7]=a2_2d*std::fabs(normal.dot(Eigen::Vector3d::UnitY()));
+      leaf.transform_contribution_[8]=a2_2d*std::fabs(normal.dot(Eigen::Vector3d::UnitZ()));
+      
+      leaf.dimension_2d_=1.0
+      *(std::fabs(mean_cross_normal.dot(Eigen::Vector3d::UnitX()))+std::fabs(mean_cross_normal.dot(Eigen::Vector3d::UnitY()))+
+      std::fabs(mean_cross_normal.dot(Eigen::Vector3d::UnitZ()))+0);
       
       leaf.icov_ = leaf.cov_.inverse ();
       if (leaf.icov_.maxCoeff () == std::numeric_limits<float>::infinity ( )
@@ -578,6 +595,7 @@ pclpca::VoxelGridCovariance<PointT>::applyFilter_Spherical (PointCloud &output)
           continue;
    
       int idx= getSphericalGridIndex(input_->points[cp]) ;
+      if(idx>3200||idx<0) continue;
 
       Leaf& leaf = leaves_[idx];
       if (leaf.nr_points == 0)
@@ -703,11 +721,7 @@ pclpca::VoxelGridCovariance<PointT>::applyFilter_Spherical (PointCloud &output)
       std::ptrdiff_t d;
       leaf.dimension_features_.maxCoeff(&d);
       leaf.dimension_label_=d+1;
-      
-      eigen_val=Eigen::Matrix3d::Identity ();
-      eigen_val(0,0)=0.01;
-      leaf.cov_ = leaf.evecs_ * eigen_val * leaf.evecs_.inverse ();
-     
+       
       //
       double a2_2d=pow((sigam(1)-sigam(0))/sigam(2),2);
       Eigen::Vector3d normal(leaf.evecs_(0,0),leaf.evecs_(1,0),leaf.evecs_(2,0));
@@ -719,7 +733,8 @@ pclpca::VoxelGridCovariance<PointT>::applyFilter_Spherical (PointCloud &output)
 	leaf.nr_points = -1;
         continue;
       }
-	
+
+      leaf.dimension_2d_=a2_2d;
       leaf.transform_contribution_[0]= a2_2d*mean_cross_normal.dot(Eigen::Vector3d::UnitX());
       leaf.transform_contribution_[1]=-a2_2d*mean_cross_normal.dot(Eigen::Vector3d::UnitX());
       leaf.transform_contribution_[2]=a2_2d*mean_cross_normal.dot(Eigen::Vector3d::UnitY());
@@ -740,68 +755,47 @@ pclpca::VoxelGridCovariance<PointT>::applyFilter_Spherical (PointCloud &output)
     }
   }
   
-  for (auto it = leaves_.begin (); it != leaves_.end ();)
-  {
-    Leaf& leaf = it->second;
-    if(leaf.nr_points < min_points_per_voxel_)
-    {
-      leaves_.erase(it++);
-    }
-    else ++it;
-  }
-  
   int num=0;
   std::cout<<leaves_.size()<<std::endl;
-  for(int i=0;i<9;i++)
+
+  for(int i=0;i<leaves_.size()/10;i++)
   {
-    std::vector<double> v_cont;
-    for (auto it = leaves_.begin (); it != leaves_.end ();++it)
+    double dimension_2d_max=0;
+    int temp=0;
+    for(int j=1;j<10;j++)
     {
-      Leaf& leaf = it->second;
-      v_cont.push_back(leaf.transform_contribution_[i]);
+      Leaf& leaf = leaves_[i*10+j];
+      if(leaf.dimension_2d_>dimension_2d_max)
+      {
+	dimension_2d_max=leaf.dimension_2d_;
+	temp=i*10+j;
+      }      
     }
-    std::sort(v_cont.begin(),v_cont.end(),std::greater<double>());
-    for (auto it = leaves_.begin (); it != leaves_.end ();++it)
-    {
-      Leaf& leaf = it->second;
-      auto it_v_cont=std::find(v_cont.begin(),v_cont.end(),leaf.transform_contribution_[i]);
-      leaf.transform_contribution_rank_[i]=std::distance(v_cont.begin(),it_v_cont);
-    }
+    if(temp!=0)leaves_[temp].is_seleted_2d=1;   
   }
- 
-  num=0;
+  
   /*std::cout<<leaves_.size()<<std::endl;
   for (auto it = leaves_.begin (); it != leaves_.end ();++it)
   {
     Leaf& leaf = it->second;
-    std::cout<<num++<<"  "<<leaf.nr_points<<" "<<it->first<<" ";
-    for(int i=0;i<9;i++)std::cout<<leaf.transform_contribution_[i]<<"/"<<leaf.transform_contribution_rank_[i]<<" ";
-    std::cout<<std::endl;
+    std::cout<<it->first<<" "<<leaf.nr_points<<" "<<leaf.dimension_2d_<<" "<<leaf.is_seleted_2d<<endl;;
   }*/
-  int threshold_rank=100;
   for (auto it = leaves_.begin (); it != leaves_.end ();)
   {
     Leaf& leaf = it->second;
-    if(leaf.transform_contribution_rank_[0]>threshold_rank&&leaf.transform_contribution_rank_[1]>threshold_rank&&
-      leaf.transform_contribution_rank_[2]>threshold_rank&&leaf.transform_contribution_rank_[3]>threshold_rank&&
-      leaf.transform_contribution_rank_[4]>threshold_rank&&leaf.transform_contribution_rank_[5]>threshold_rank&&
-      leaf.transform_contribution_rank_[6]>threshold_rank&&leaf.transform_contribution_rank_[7]>threshold_rank&&
-      leaf.transform_contribution_rank_[8]>threshold_rank)
+    if(!leaf.is_seleted_2d||leaf.nr_points<min_points_per_voxel_)
     {
       leaves_.erase(it++);
     }
     else ++it;
   }
-  num=0;
   std::cout<<leaves_.size()<<std::endl;
   /*for (auto it = leaves_.begin (); it != leaves_.end ();++it)
   {
     Leaf& leaf = it->second;
-    std::cout<<num++<<"  "<<leaf.nr_points<<" "<<it->first<<" ";
-    for(int i=0;i<9;i++)std::cout<<leaf.transform_contribution_[i]<<"/"<<leaf.transform_contribution_rank_[i]<<" ";
-    std::cout<<std::endl;
+    std::cout<<it->first<<" "<<leaf.nr_points<<" "<<leaf.dimension_2d_<<" "<<leaf.is_seleted_2d<<endl;;
   }*/
-  
+      
   output.width = static_cast<uint32_t> (output.points.size ());
 }
 

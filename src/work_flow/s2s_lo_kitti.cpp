@@ -9,6 +9,7 @@
 
 #include <ndt_omp/ndt_omp.h>
 #include <ndt_omp/gicp_omp.h>
+#include <ndt_pca/ndt_pca.h>
 
 #include <dirent.h>//遍历系统指定目录下文件要包含的头文件
 #include <Eigen/Dense>

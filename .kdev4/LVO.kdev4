@@ -20,7 +20,7 @@ Path=gcc
 Type=GCC
 
 [Launch]
-Launch Configurations=Launch Configuration 1,Launch Configuration 3,Launch Configuration 0,Launch Configuration 2
+Launch Configurations=Launch Configuration 1,Launch Configuration 3,Launch Configuration 0,Launch Configuration 2,Launch Configuration 4
 
 [Launch][Launch Configuration 0]
 Configured Launch Modes=execute
@@ -83,13 +83,31 @@ Name=s2s_lo_kitti
 Type=Native Application
 
 [Launch][Launch Configuration 3][Data]
-Arguments='/home/whu/data/lidar_odometry_kitti/KITTI_odom_ndt_s2s_omp_RV_direct1_1.5m'  04
+Arguments=/home/whu/data/lidar_odom_kitti/KITTI_lo_s2k_5_0.17_1.0_weight2d_2  04
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x04\x00\x00\x00\x06\x00L\x00V\x00O\x00\x00\x00\x06\x00s\x00r\x00c\x00\x00\x00\x12\x00w\x00o\x00r\x00k\x00_\x00f\x00l\x00o\x00w\x00\x00\x00\x18\x00s\x002\x00s\x00_\x00l\x00o\x00_\x00k\x00i\x00t\x00t\x00i)
 Dependency Action=Build
 EnvironmentGroup=
 Executable=file:///home/whu/slam_ws/src/LVO/
 External Terminal=konsole --noclose --workdir %workdir -e %exe
 Project Target=LVO,src,work_flow,s2s_lo_kitti
+Use External Terminal=false
+Working Directory=
+isExecutable=false
+
+[Launch][Launch Configuration 4]
+Configured Launch Modes=execute
+Configured Launchers=nativeAppLauncher
+Name=s2m_lo_kitti
+Type=Native Application
+
+[Launch][Launch Configuration 4][Data]
+Arguments=/home/whu/data/lidar_odom_kitti/KITTI_lo_s2m_spherical 04
+Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x04\x00\x00\x00\x06\x00L\x00V\x00O\x00\x00\x00\x06\x00s\x00r\x00c\x00\x00\x00\x12\x00w\x00o\x00r\x00k\x00_\x00f\x00l\x00o\x00w\x00\x00\x00\x18\x00s\x002\x00m\x00_\x00l\x00o\x00_\x00k\x00i\x00t\x00t\x00i)
+Dependency Action=Build
+EnvironmentGroup=
+Executable=file:///home/whu/slam_ws/src/LVO/
+External Terminal=konsole --noclose --workdir %workdir -e %exe
+Project Target=LVO,src,work_flow,s2m_lo_kitti
 Use External Terminal=false
 Working Directory=
 isExecutable=false

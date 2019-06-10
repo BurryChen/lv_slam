@@ -22,6 +22,7 @@
 
 #include <ndt_omp/ndt_omp.h>
 #include <ndt_omp/gicp_omp.h>
+#include <ndt_pca/ndt_pca.h>
 #include <sophus/so3.h>
 #include <sophus/se3.h>
 
@@ -109,13 +110,13 @@ private:
     std::cout << "--- reg_s2s,reg_s2k=pcl::NDT_OMP ---" << std::endl;
     reg_s2s.setResolution(1.0);
     reg_s2s.setNumThreads(8);
-    reg_s2s.setNeighborhoodSearchMethod(pclomp::DIRECT1);
+    reg_s2s.setNeighborhoodSearchMethod(pclpca::DIRECT1);
     reg_s2s.setTransformationEpsilon(0.01);
     reg_s2s.setMaximumIterations(64);
     
     reg_s2k.setResolution(1.0);
     reg_s2k.setNumThreads(8);
-    reg_s2k.setNeighborhoodSearchMethod(pclomp::DIRECT1);
+    reg_s2k.setNeighborhoodSearchMethod(pclpca::DIRECT1);
     reg_s2k.setTransformationEpsilon(0.01);
     reg_s2k.setMaximumIterations(64);
   
@@ -545,7 +546,7 @@ private:
   pcl::Registration<PointT, PointT>::Ptr registration;
   
   //odom pose file with KITTI calibration tf_cal
-  pclomp::NormalDistributionsTransform<PointT, PointT> reg_s2s, reg_s2k;
+  pclpca::NormalDistributionsTransform<PointT, PointT> reg_s2s, reg_s2k;
   pclomp::NormalDistributionsTransform<PointT, PointT> ground_s2k;
   FILE *fp_odom,*fp_scan_error;
   Eigen::Matrix4d tf_velo2cam;

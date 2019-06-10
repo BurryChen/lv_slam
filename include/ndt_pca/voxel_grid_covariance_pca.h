@@ -97,6 +97,10 @@ namespace pclpca
         leaf_size_[0]=4*(2+24.9)/(64-1);
         leaf_size_[1]=1.8;
         div_b_[1]=360/leaf_size_[1];
+	for(int i=1;i<=div_b_[1]*64/4;i++)
+	{
+	  Leaf& leaf = leaves_[i];	  
+	}
       }
       
       inline int 
@@ -135,7 +139,9 @@ namespace pclpca
           evecs_ (Eigen::Matrix3d::Identity ()),
           evals_ (Eigen::Vector3d::Zero ()),
 	  dimension_features_ (Eigen::Vector3d::Zero ()),
-	  dimension_label_(0)
+	  dimension_label_(0),
+	  dimension_2d_(0),
+	  is_seleted_2d(0)
         {
         }
 
@@ -212,6 +218,12 @@ namespace pclpca
         {
           return (dimension_label_);
         }
+        
+        int
+        getDimension2d () const
+        {
+          return (dimension_2d_);
+        }
 
         /** \brief Number of points contained by voxel */
         int nr_points;
@@ -247,6 +259,9 @@ namespace pclpca
 	double transform_contribution_[9];
 	int transform_contribution_rank_[9];
 	std::vector<int> indices_points_;
+	double dimension_2d_;
+	bool is_seleted_2d;
+	
       };
 
       /** \brief Pointer to VoxelGridCovariance leaf structure */
@@ -264,7 +279,7 @@ namespace pclpca
        */
       VoxelGridCovariance () :
         searchable_ (true),
-        min_points_per_voxel_ (20),
+        min_points_per_voxel_ (6),
         min_covar_eigvalue_mult_ (0.01),
         leaves_ (),
         voxel_centroids_ (),
@@ -352,8 +367,8 @@ namespace pclpca
       {
         searchable_ = searchable;
         voxel_centroids_ = PointCloudPtr (new PointCloud);
-        //applyFilter (*voxel_centroids_);
-        applyFilter_Spherical(*voxel_centroids_);
+        applyFilter (*voxel_centroids_);
+        //applyFilter_Spherical(*voxel_centroids_);
 
         if (searchable_ && voxel_centroids_->size() > 0)
         {
