@@ -83,7 +83,7 @@ Name=s2s_lo_kitti
 Type=Native Application
 
 [Launch][Launch Configuration 3][Data]
-Arguments=/home/whu/data/lidar_odom_kitti/KITTI_lo_s2k_5_0.17_1.0_weight2d_2  04
+Arguments=/home/whu/data/lidar_odom_kitti/KITTI_lo_s2k_10_0.17_1.0_weight2  04
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x04\x00\x00\x00\x06\x00L\x00V\x00O\x00\x00\x00\x06\x00s\x00r\x00c\x00\x00\x00\x12\x00w\x00o\x00r\x00k\x00_\x00f\x00l\x00o\x00w\x00\x00\x00\x18\x00s\x002\x00s\x00_\x00l\x00o\x00_\x00k\x00i\x00t\x00t\x00i)
 Dependency Action=Build
 EnvironmentGroup=

@@ -394,9 +394,15 @@ pclpca::VoxelGridCovariance<PointT>::applyFilter (PointCloud &output)
       leaf.transform_contribution_[7]=a2_2d*std::fabs(normal.dot(Eigen::Vector3d::UnitY()));
       leaf.transform_contribution_[8]=a2_2d*std::fabs(normal.dot(Eigen::Vector3d::UnitZ()));
       
-      leaf.dimension_2d_=1.0
-      *(std::fabs(mean_cross_normal.dot(Eigen::Vector3d::UnitX()))+std::fabs(mean_cross_normal.dot(Eigen::Vector3d::UnitY()))+
-      std::fabs(mean_cross_normal.dot(Eigen::Vector3d::UnitZ()))+0);
+      //leaf.dimension_2d_=1.0
+      //*(std::fabs(mean_cross_normal.dot(Eigen::Vector3d::UnitX()))+std::fabs(mean_cross_normal.dot(Eigen::Vector3d::UnitY()))+
+      //std::fabs(mean_cross_normal.dot(Eigen::Vector3d::UnitZ()))+0);
+      
+      if(leaf.dimension_label_==2)a2_2d=1.1;
+      else if(leaf.dimension_label_==3) a2_2d=1;
+      else if(leaf.dimension_label_==1) a2_2d=0.9;
+      leaf.dimension_2d_=a2_2d*leaf.mean_.norm();
+      //std::cout<<a2_2d<< " "<<std::endl;
       
       leaf.icov_ = leaf.cov_.inverse ();
       if (leaf.icov_.maxCoeff () == std::numeric_limits<float>::infinity ( )
