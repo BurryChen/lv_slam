@@ -161,7 +161,7 @@ private:
     pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>());
     pcl::fromROSMsg(*cloud_msg, *cloud);
 
-    Eigen::Matrix4d pose = matching_s2k_ground(cloud_msg->header.stamp, cloud);//base系在odom系下的变换（odom=第一帧keyframe的base）
+    Eigen::Matrix4d pose = matching_s2k(cloud_msg->header.stamp, cloud);//base系在odom系下的变换（odom=第一帧keyframe的base）
     publish_odometry(cloud_msg->header.stamp, cloud_msg->header.frame_id, pose);
     scan_count++;
     

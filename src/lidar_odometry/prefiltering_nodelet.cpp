@@ -114,6 +114,8 @@ private:
     }
 
     pcl::PointCloud<PointT>::ConstPtr filtered = distance_filter(src_cloud);
+    //pcl::PointCloud<PointT>::ConstPtr filtered = vertical_angle_calibration(src_cloud);
+    //filtered = distance_filter(filtered);    
     filtered = downsample(filtered);
     filtered = outlier_removal(filtered);
 
@@ -160,6 +162,45 @@ private:
         return d > distance_near_thresh && d < distance_far_thresh;
       }
     );
+
+    filtered->width = filtered->size();
+    filtered->height = 1;
+    filtered->is_dense = false;
+
+    filtered->header = cloud->header;
+
+    return filtered;
+  }
+  
+  pcl::PointCloud<PointT>::ConstPtr vertical_angle_calibration(const pcl::PointCloud<PointT>::ConstPtr& cloud) const {
+    pcl::PointCloud<PointT>::Ptr filtered(new pcl::PointCloud<PointT>());
+    filtered->reserve(cloud->size());
+
+    for (size_t cp = 0; cp < cloud->points.size (); ++cp)
+    {
+      PointT p=cloud->points[cp];
+      double detal=0.11*M_PI/180;  //delta_vertical_angle=0.11
+      /*double range = sqrt(p.x * p.x + p.y * p.y+ p.z * p.z);
+      double cos_theta=p.x/sqrt(p.x * p.x + p.y * p.y);
+      double sin_theta=p.y/sqrt(p.x * p.x + p.y * p.y);
+      double phi = std::asin(p.z/range);     
+      phi+=detal;
+      PointT p1;
+      p1.z=range*std::sin(phi);
+      p1.x=range*std::cos(phi)*cos_theta;
+      p1.y=range*std::cos(phi)*sin_theta;*/
+          
+      //Intrinsic calibration of the vertical angle of laser fibers (take the same correction for all lasers)
+      Eigen::Vector3d rotationVector = (Eigen::Vector3d(p.x,  p.y, p.z)).cross(Eigen::Vector3d(0., 0., 1.));
+      rotationVector.normalize();
+      Eigen::Matrix3d rotationScan;
+      rotationScan = Eigen::AngleAxisd(detal, rotationVector);
+      Eigen::Vector3d p2Vector=rotationScan*Eigen::Vector3d(p.x,  p.y, p.z); 
+      PointT p2;
+      p2.x=p2Vector(0);p2.y=p2Vector(1);p2.z=p2Vector(2);   
+
+      filtered->push_back(p2);            
+    }
 
     filtered->width = filtered->size();
     filtered->height = 1;
