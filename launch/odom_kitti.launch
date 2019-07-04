@@ -43,6 +43,7 @@
     <param name="statistical_stddev" value="1.2" />  <!--统计的方式过滤外点，设置判断是否为离群点的阈值-->
     <param name="radius_radius" value="0.5" />       <!--以半径为0.5米的方式进行统计-->
     <param name="radius_min_neighbors" value="5" />  <!--统计的邻居的最小数目为5-->
+    <param name="use_angle_calibration" value="false" />
   </node>
 
   <!-- scan_matching_odom_nodelet -->

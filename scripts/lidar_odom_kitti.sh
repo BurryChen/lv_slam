@@ -9,7 +9,7 @@ durations=(471 115 484 83 29 288 115 115 423 165 125     96 110 342 66 198 180 5
 
 #for seq in 11 12 13 14 15 16 17 18 19 20 21 
 for seq in 03 04 05 06 07 08 09 10 02 00
-#for seq in 01  #delta_vertical_angle=0.11
+#for seq in 01  #use_angle_calibration=true
 do
 
 logfile=${1}/data/${seq}.log

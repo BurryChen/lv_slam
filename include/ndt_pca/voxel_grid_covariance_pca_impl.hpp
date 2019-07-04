@@ -372,18 +372,14 @@ pclpca::VoxelGridCovariance<PointT>::applyFilter (PointCloud &output)
       leaf.dimension_features_.maxCoeff(&d);
       leaf.dimension_label_=d+1;
        
-      //
-      double a2_2d=pow((sigam(1)-sigam(0))/sigam(2),2);
+      /*double a2_2d=pow((sigam(1)-sigam(0))/sigam(2),2);
       Eigen::Vector3d normal(leaf.evecs_(0,0),leaf.evecs_(1,0),leaf.evecs_(2,0));
       normal.normalize();
       Eigen::Vector3d mean_cross_normal=leaf.mean_.cross(normal);
-
-      //if(a2_2d<1e-5)
       if(a2_2d<0)
       {
 	leaf.nr_points = -1;
       }
-     
       leaf.transform_contribution_[0]= a2_2d*mean_cross_normal.dot(Eigen::Vector3d::UnitX());
       leaf.transform_contribution_[1]=-a2_2d*mean_cross_normal.dot(Eigen::Vector3d::UnitX());
       leaf.transform_contribution_[2]=a2_2d*mean_cross_normal.dot(Eigen::Vector3d::UnitY());
@@ -392,16 +388,13 @@ pclpca::VoxelGridCovariance<PointT>::applyFilter (PointCloud &output)
       leaf.transform_contribution_[5]=-a2_2d*mean_cross_normal.dot(Eigen::Vector3d::UnitZ());
       leaf.transform_contribution_[6]=a2_2d*std::fabs(normal.dot(Eigen::Vector3d::UnitX()));
       leaf.transform_contribution_[7]=a2_2d*std::fabs(normal.dot(Eigen::Vector3d::UnitY()));
-      leaf.transform_contribution_[8]=a2_2d*std::fabs(normal.dot(Eigen::Vector3d::UnitZ()));
+      leaf.transform_contribution_[8]=a2_2d*std::fabs(normal.dot(Eigen::Vector3d::UnitZ()));*/
       
-      //leaf.dimension_2d_=1.0
-      //*(std::fabs(mean_cross_normal.dot(Eigen::Vector3d::UnitX()))+std::fabs(mean_cross_normal.dot(Eigen::Vector3d::UnitY()))+
-      //std::fabs(mean_cross_normal.dot(Eigen::Vector3d::UnitZ()))+0);
-      
-      if(leaf.dimension_label_==2)a2_2d=1.1;
-      else if(leaf.dimension_label_==3) a2_2d=1;
-      else if(leaf.dimension_label_==1) a2_2d=0.9;
-      leaf.dimension_2d_=a2_2d*leaf.mean_.norm();
+      double scale=1;
+      if(leaf.dimension_label_==2)scale=1.25;
+      else if(leaf.dimension_label_==3) scale=1;
+      else if(leaf.dimension_label_==1) scale=0.75;
+      leaf.dimension_2d_=scale*leaf.mean_.norm();
       //std::cout<<a2_2d<< " "<<std::endl;
       
       leaf.icov_ = leaf.cov_.inverse ();

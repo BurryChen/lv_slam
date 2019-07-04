@@ -85,6 +85,7 @@ private:
     distance_far_thresh = private_nh.param<double>("distance_far_thresh", 100.0);
 
     base_link_frame = private_nh.param<std::string>("base_link_frame", "");
+    use_angle_calibration = private_nh.param<bool>("use_angle_calibration", false);
   }
 
   //void cloud_callback(pcl::PointCloud<PointT>::ConstPtr src_cloud)
@@ -113,9 +114,16 @@ private:
       src_cloud = transformed;
     }
 
-    pcl::PointCloud<PointT>::ConstPtr filtered = distance_filter(src_cloud);
-    //pcl::PointCloud<PointT>::ConstPtr filtered = vertical_angle_calibration(src_cloud);
-    //filtered = distance_filter(filtered);    
+    pcl::PointCloud<PointT>::ConstPtr filtered;
+    if(use_angle_calibration) 
+    {
+      filtered = vertical_angle_calibration(src_cloud);  
+      filtered = distance_filter(filtered);  
+    }
+    else
+    {
+      filtered = distance_filter(src_cloud);
+    }
     filtered = downsample(filtered);
     filtered = outlier_removal(filtered);
 
@@ -225,6 +233,7 @@ private:
   bool use_distance_filter;
   double distance_near_thresh;
   double distance_far_thresh;
+  bool use_angle_calibration;
 
   pcl::Filter<PointT>::Ptr downsample_filter;
   pcl::Filter<PointT>::Ptr outlier_removal_filter;
