@@ -594,7 +594,6 @@ pclpca::VoxelGridCovariance<PointT>::applyFilter_Spherical (PointCloud &output)
           continue;
    
       int idx= getSphericalGridIndex(input_->points[cp]) ;
-      if(idx>3200||idx<0) continue;
 
       Leaf& leaf = leaves_[idx];
       if (leaf.nr_points == 0)
@@ -720,7 +719,11 @@ pclpca::VoxelGridCovariance<PointT>::applyFilter_Spherical (PointCloud &output)
       std::ptrdiff_t d;
       leaf.dimension_features_.maxCoeff(&d);
       leaf.dimension_label_=d+1;
-       
+      
+      eigen_val=Eigen::Matrix3d::Identity ();
+      eigen_val(0,0)=0.01;
+      leaf.cov_ = leaf.evecs_ * eigen_val * leaf.evecs_.inverse ();
+     
       //
       double a2_2d=pow((sigam(1)-sigam(0))/sigam(2),2);
       Eigen::Vector3d normal(leaf.evecs_(0,0),leaf.evecs_(1,0),leaf.evecs_(2,0));
@@ -732,8 +735,7 @@ pclpca::VoxelGridCovariance<PointT>::applyFilter_Spherical (PointCloud &output)
 	leaf.nr_points = -1;
         continue;
       }
-
-      leaf.dimension_2d_=a2_2d;
+	
       leaf.transform_contribution_[0]= a2_2d*mean_cross_normal.dot(Eigen::Vector3d::UnitX());
       leaf.transform_contribution_[1]=-a2_2d*mean_cross_normal.dot(Eigen::Vector3d::UnitX());
       leaf.transform_contribution_[2]=a2_2d*mean_cross_normal.dot(Eigen::Vector3d::UnitY());
@@ -743,6 +745,12 @@ pclpca::VoxelGridCovariance<PointT>::applyFilter_Spherical (PointCloud &output)
       leaf.transform_contribution_[6]=a2_2d*std::fabs(normal.dot(Eigen::Vector3d::UnitX()));
       leaf.transform_contribution_[7]=a2_2d*std::fabs(normal.dot(Eigen::Vector3d::UnitY()));
       leaf.transform_contribution_[8]=a2_2d*std::fabs(normal.dot(Eigen::Vector3d::UnitZ()));
+         
+      double scale=1;
+      if(leaf.dimension_label_==2)scale=1.25;
+      else if(leaf.dimension_label_==3) scale=1;
+      else if(leaf.dimension_label_==1) scale=0.75;
+      leaf.dimension_2d_=scale*leaf.mean_.norm();
       
       leaf.icov_ = leaf.cov_.inverse ();
       if (leaf.icov_.maxCoeff () == std::numeric_limits<float>::infinity ( )
@@ -754,46 +762,17 @@ pclpca::VoxelGridCovariance<PointT>::applyFilter_Spherical (PointCloud &output)
     }
   }
   
-  int num=0;
   std::cout<<leaves_.size()<<std::endl;
-
-  for(int i=0;i<leaves_.size()/10;i++)
-  {
-    double dimension_2d_max=0;
-    int temp=0;
-    for(int j=1;j<10;j++)
-    {
-      Leaf& leaf = leaves_[i*10+j];
-      if(leaf.dimension_2d_>dimension_2d_max)
-      {
-	dimension_2d_max=leaf.dimension_2d_;
-	temp=i*10+j;
-      }      
-    }
-    if(temp!=0)leaves_[temp].is_seleted_2d=1;   
-  }
-  
-  /*std::cout<<leaves_.size()<<std::endl;
-  for (auto it = leaves_.begin (); it != leaves_.end ();++it)
-  {
-    Leaf& leaf = it->second;
-    std::cout<<it->first<<" "<<leaf.nr_points<<" "<<leaf.dimension_2d_<<" "<<leaf.is_seleted_2d<<endl;;
-  }*/
   for (auto it = leaves_.begin (); it != leaves_.end ();)
   {
     Leaf& leaf = it->second;
-    if(!leaf.is_seleted_2d||leaf.nr_points<min_points_per_voxel_)
+    if(leaf.nr_points < min_points_per_voxel_)
     {
       leaves_.erase(it++);
     }
     else ++it;
   }
   std::cout<<leaves_.size()<<std::endl;
-  /*for (auto it = leaves_.begin (); it != leaves_.end ();++it)
-  {
-    Leaf& leaf = it->second;
-    std::cout<<it->first<<" "<<leaf.nr_points<<" "<<leaf.dimension_2d_<<" "<<leaf.is_seleted_2d<<endl;;
-  }*/
       
   output.width = static_cast<uint32_t> (output.points.size ());
 }

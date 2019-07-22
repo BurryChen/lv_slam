@@ -118,14 +118,14 @@ private:
     if(use_angle_calibration) 
     {
       filtered = vertical_angle_calibration(src_cloud);  
-      filtered = distance_filter(filtered);  
+      //filtered = distance_filter(filtered);  
     }
     else
     {
       filtered = distance_filter(src_cloud);
     }
-    filtered = downsample(filtered);
-    filtered = outlier_removal(filtered);
+    //filtered = downsample(filtered);
+    //filtered = outlier_removal(filtered);
 
     //points_pub.publish(filtered);
     sensor_msgs::PointCloud2 cloud_msg;
@@ -187,7 +187,7 @@ private:
     for (size_t cp = 0; cp < cloud->points.size (); ++cp)
     {
       PointT p=cloud->points[cp];
-      double detal=0.11*M_PI/180;  //delta_vertical_angle=0.11
+      double detal=0.22*M_PI/180;  //delta_vertical_angle=0.11
       /*double range = sqrt(p.x * p.x + p.y * p.y+ p.z * p.z);
       double cos_theta=p.x/sqrt(p.x * p.x + p.y * p.y);
       double sin_theta=p.y/sqrt(p.x * p.x + p.y * p.y);

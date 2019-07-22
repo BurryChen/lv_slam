@@ -94,13 +94,14 @@ namespace pclpca
       inline void
       setSphericalGridPara()
       {
+	setMinPointPerVoxel(20);
         leaf_size_[0]=4*(2+24.9)/(64-1);
         leaf_size_[1]=1.8;
         div_b_[1]=360/leaf_size_[1];
-	for(int i=1;i<=div_b_[1]*64/4;i++)
+	/*for(int i=1;i<=div_b_[1]*64/4;i++)
 	{
 	  Leaf& leaf = leaves_[i];	  
-	}
+	}*/
       }
       
       inline int 
@@ -367,8 +368,8 @@ namespace pclpca
       {
         searchable_ = searchable;
         voxel_centroids_ = PointCloudPtr (new PointCloud);
-        applyFilter (*voxel_centroids_);
-        //applyFilter_Spherical(*voxel_centroids_);
+        //applyFilter (*voxel_centroids_);
+        applyFilter_Spherical(*voxel_centroids_);
 
         if (searchable_ && voxel_centroids_->size() > 0)
         {

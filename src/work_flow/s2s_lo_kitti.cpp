@@ -43,6 +43,37 @@ pcl::PointCloud<PointT>::Ptr distance_filter(const pcl::PointCloud<PointT>::Ptr&
     return filtered;
   }
   
+
+pcl::PointCloud<PointT>::Ptr vertical_angle_calibration(const pcl::PointCloud<PointT>::ConstPtr& cloud) { 
+    pcl::PointCloud<PointT>::Ptr filtered(new pcl::PointCloud<PointT>()); 
+    filtered->reserve(cloud->size()); 
+ 
+    for (size_t cp = 0; cp < cloud->points.size (); ++cp) 
+    { 
+      PointT p=cloud->points[cp]; 
+      double detal=0.22*M_PI/180;  //delta_vertical_angle=0.22 
+           
+      //Intrinsic calibration of the vertical angle of laser fibers (take the same correction for all lasers) 
+      Eigen::Vector3d rotationVector = (Eigen::Vector3d(p.x,  p.y, p.z)).cross(Eigen::Vector3d(0., 0., 1.)); 
+      rotationVector.normalize(); 
+      Eigen::Matrix3d rotationScan; 
+      rotationScan = Eigen::AngleAxisd(detal, rotationVector); 
+      Eigen::Vector3d p2Vector=rotationScan*Eigen::Vector3d(p.x,  p.y, p.z);  
+      PointT p2; 
+      p2.x=p2Vector(0);p2.y=p2Vector(1);p2.z=p2Vector(2);    
+ 
+      filtered->push_back(p2);             
+    } 
+ 
+    filtered->width = filtered->size(); 
+    filtered->height = 1; 
+    filtered->is_dense = false; 
+    
+    filtered->header = cloud->header; 
+ 
+    return filtered; 
+} 
+  
 int pcdfilter(const struct dirent *filename)    //文件筛选器
 {
     size_t len;
@@ -118,10 +149,10 @@ int main(int argc, char** argv) {
   ros::Time::init(); 
   
   std::cout << "--- pcl::NDT_OMP ---" << std::endl;
-  pclomp::NormalDistributionsTransform<PointT, PointT>::Ptr ndt_omp(new pclomp::NormalDistributionsTransform<PointT, PointT>());
+  pclpca::NormalDistributionsTransform<PointT, PointT>::Ptr ndt_omp(new pclpca::NormalDistributionsTransform<PointT, PointT>());
   ndt_omp->setResolution(1.0);
   ndt_omp->setNumThreads(8);
-  ndt_omp->setNeighborhoodSearchMethod(pclomp::DIRECT1);
+  ndt_omp->setNeighborhoodSearchMethod(pclpca::DIRECT1);
   ndt_omp->setStepSize(0.1);
   ndt_omp->setTransformationEpsilon(0.01);
   ndt_omp->setMaximumIterations(64);
@@ -169,7 +200,7 @@ int main(int argc, char** argv) {
       return 0;
     }
     
-    voxelgrid.setInputCloud(target_cloud);
+    /*voxelgrid.setInputCloud(target_cloud);
     voxelgrid.filter(*downsampled);
     *target_cloud = *downsampled;
 
@@ -180,8 +211,12 @@ int main(int argc, char** argv) {
     distance_filted=distance_filter(target_cloud,1,50);
     *target_cloud = *distance_filted;
     distance_filted=distance_filter(source_cloud,1,50);
-    *source_cloud=*distance_filted;
+    *source_cloud=*distance_filted;*/
   
+    distance_filted=vertical_angle_calibration(target_cloud);
+    *target_cloud = *distance_filted;
+    distance_filted=vertical_angle_calibration(source_cloud);
+    *source_cloud=*distance_filted;
     
     ndt_omp->setInputTarget(target_cloud);
     ndt_omp->setInputSource(source_cloud);

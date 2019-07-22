@@ -263,8 +263,8 @@ pclpca::NormalDistributionsTransform<PointSource, PointTarget>::computeDerivativ
 			target_cells_.getNeighborhoodAtPoint7(x_trans_pt, neighborhood);
 			break;
 		case DIRECT1:
-			target_cells_.getNeighborhoodAtPoint1(x_trans_pt, neighborhood);
-			//target_cells_.getNeighborhoodAtPoint1_Spherical(x_trans_pt, neighborhood);
+			//target_cells_.getNeighborhoodAtPoint1(x_trans_pt, neighborhood);
+			target_cells_.getNeighborhoodAtPoint1_Spherical(x_trans_pt, neighborhood);
 			break;
 		}
 
