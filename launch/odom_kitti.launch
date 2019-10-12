@@ -51,9 +51,9 @@
       <param name="odom_frame_id" value="odom" />     
       <param name="res_dir" type="string" value="$(arg res_dir)" /> 
       <param name="seq" type="string" value="$(arg seq)" /> 
-      <param name="keyframe_delta_trans" value="10.0" />       <!--m-->
+      <param name="keyframe_delta_trans" value="7.5" />       <!--m-->
       <param name="keyframe_delta_angle" value="0.17" />      <!--0.17=rad 10°-->
-      <param name="keyframe_delta_time" value="1.0" />        <!--s,当前帧选取作为关键帧的条件-->
+      <param name="keyframe_delta_time" value="2.0" />        <!--s,当前帧选取作为关键帧的条件-->
   </node>
 
   <!--

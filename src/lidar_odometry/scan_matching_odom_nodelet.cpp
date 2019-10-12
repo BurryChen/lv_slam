@@ -105,6 +105,22 @@ private:
       }
     }
     fclose(fp);
+    }
+    
+    // vo as initial value
+    std::string vo_file="/media/whu/Research/04Dissertation/06LidarVisualOdometry/vins_output/vo_stereo/data/KITTI_"+seq+"_odom.txt";
+    fp = fopen(vo_file.c_str(),"r");
+    if (fp) {
+    while (!feof(fp)) {
+      Eigen::Matrix4d p=Eigen::Matrix4d::Identity();
+      if (fscanf(fp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
+                   &(p(0,0)), &(p(0,1)), &(p(0,2)), &(p(0,3)),
+                   &(p(1,0)), &(p(1,1)), &(p(1,2)), &(p(1,3)),
+                   &(p(2,0)), &(p(2,1)), &(p(2,2)), &(p(2,3)))) {
+      vo.push_back(tf_velo2cam.inverse()*p*tf_velo2cam);
+      }
+    }
+    fclose(fp);
     }  
   
     //registration parameters
@@ -333,6 +349,7 @@ private:
     if(poses_cam.size()!=0)tf_s2k_gt=poses_cam[key_id].inverse()*poses_cam[scan_count];
     Eigen::Matrix4d tf_s2k_gt_velo=tf_velo2cam.inverse()*tf_s2k_gt*tf_velo2cam;
     std::cout<<"tf_s2k_gt_velo: \n"<<tf_s2k_gt_velo<<std::endl;
+    guess_trans=vo[key_id].inverse()*vo[scan_count];
     std::cout<<"guess_trans: \n"<<guess_trans<<std::endl;
     
     reg_s2k.setInputSource(filtered); 
@@ -668,7 +685,7 @@ private:
   pcl::PointCloud<PointT>::ConstPtr filtered,key;
   Eigen::Matrix4d tf_s2s,tf_s2k,key_pose,pre_tf_s2k;
   Eigen::Matrix4d odom_velo,tf_s2k_error;
-  vector<Eigen::Matrix4d> poses_cam,poses_velo;
+  vector<Eigen::Matrix4d> poses_cam,poses_velo,vo;
 };
 
 }
