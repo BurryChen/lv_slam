@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>LVO</name>
+  <name>lvo</name>
   <version>0.0.0</version>
   <description>The lidar_visual_odometry package</description>
 

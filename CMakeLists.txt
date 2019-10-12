@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(LVO)
+project(lvo)
 
 # -mavx causes a lot of errors!!
 add_definitions(-std=c++11 -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2)
@@ -14,7 +14,7 @@ find_package(Sophus REQUIRED PATHS "/home/whu/tools/Sophus/build")
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   pcl_ros
-  geodesy
+  #geodesy
   nmea_msgs
   sensor_msgs
   message_generation
