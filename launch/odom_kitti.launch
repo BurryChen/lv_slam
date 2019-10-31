@@ -55,11 +55,13 @@
       <param name="keyframe_delta_angle" value="0.17" />      <!--0.17=rad 10°-->
       <param name="keyframe_delta_time" value="1.0" />        <!--s,当前帧选取作为关键帧的条件-->
   </node>
-
-  <!--
+  
+  <node pkg="lv_slam" type="map2odom_publisher.py" name="map2odom_publisher" />
+  
+  <!-- -->
   <group if="$(arg rviz)">
     <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find hdl_graph_slam)/rviz/hdl_graph_slam2.rviz" />
   </group>
-  -->
+  
   
 </launch>

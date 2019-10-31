@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(lvo)
+project(lv_slam)
 
 # -mavx causes a lot of errors!!
 add_definitions(-std=c++11 -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2)
@@ -19,6 +19,8 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   message_generation
   Sophus
+  cv_bridge
+  image_transport
 )
 
 find_package(PCL 1.7 REQUIRED)
@@ -47,7 +49,14 @@ endif()
 #add_message_files(FILES
 #  xx.msg
 #)
+add_message_files(FILES
+  FloorCoeffs.msg
+)
 
+add_service_files(FILES
+  SaveMap.srv
+  DumpGraph.srv
+)
 generate_messages(DEPENDENCIES std_msgs)
 
 ###################################
@@ -84,3 +93,6 @@ add_subdirectory(src/lidar_odometry)
 
 add_subdirectory(src/work_flow)
 add_subdirectory(test)
+
+add_subdirectory(src/local_odometry)
+add_subdirectory(src/global_graph)

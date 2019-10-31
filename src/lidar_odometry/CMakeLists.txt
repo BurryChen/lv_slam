@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 
 #############################
-## 3.hdl_graph_slam(lib&exe) ##
+## 3.lv_slam(lib&exe) ##
 #############################
 # nodelets
 add_library(prefiltering_nodelet prefiltering_nodelet.cpp)
