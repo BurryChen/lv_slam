@@ -6,6 +6,14 @@
 
 #include <g2o/core/hyper_graph.h>
 
+#include <g2o/types/slam3d/edge_se3.h>
+#include <g2o/types/slam3d/vertex_se3.h>
+#include <g2o/edge_se3_plane.hpp>
+#include <g2o/edge_se3_priorxy.hpp>
+#include <g2o/edge_se3_priorxyz.hpp>
+#include <g2o/edge_se3_priorvec.hpp>
+#include <g2o/edge_se3_priorquat.hpp>
+
 namespace g2o {
   class VertexSE3;
   class VertexPlane;

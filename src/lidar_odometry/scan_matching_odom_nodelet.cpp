@@ -37,11 +37,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   ScanMatchingOdomNodelet() {}
-  virtual  ~ScanMatchingOdomNodelet() 
-  {
-    fclose(fp_odom);
-    fclose(fp_scan_error);  
-  }
+  virtual  ~ScanMatchingOdomNodelet() {}
 
   virtual void onInit() {
     NODELET_DEBUG("initializing scan_matching_odom_nodelet...");
@@ -327,7 +323,7 @@ private:
     pcl::PointCloud<PointT>::Ptr matched(new pcl::PointCloud<PointT>());
     
     //s2k
-    std::cout <<scan_count<<" to "<<key_id<<"  local odometry"<< std::endl;
+    //std::cout <<scan_count<<" to "<<key_id<<"  in lidar_odometry"<< std::endl;
     
     Eigen::Matrix4d tf_s2k_gt=Eigen::Matrix4d::Identity();
     if(poses_cam.size()!=0)tf_s2k_gt=poses_cam[key_id].inverse()*poses_cam[scan_count];

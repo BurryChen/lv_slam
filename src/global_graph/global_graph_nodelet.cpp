@@ -48,14 +48,6 @@
 #include <global_graph/map_cloud_generator.hpp>
 #include <global_graph/nmea_sentence_parser.hpp>
 
-#include <g2o/types/slam3d/edge_se3.h>
-#include <g2o/types/slam3d/vertex_se3.h>
-#include <g2o/edge_se3_plane.hpp>
-#include <g2o/edge_se3_priorxy.hpp>
-#include <g2o/edge_se3_priorxyz.hpp>
-#include <g2o/edge_se3_priorvec.hpp>
-#include <g2o/edge_se3_priorquat.hpp>
-
 #include <image_transport/image_transport.h>   //image_transport
 #include <cv_bridge/cv_bridge.h>              //cv_bridge
 

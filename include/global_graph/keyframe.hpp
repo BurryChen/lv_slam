@@ -41,6 +41,7 @@ public:
   ros::Time stamp;                                // timestamp
   int seq;                                        // seq int bag message
   Eigen::Isometry3d odom;                         // odometry (estimated by scan_matching_odometry) 优化前odom系下的pose
+  Eigen::Isometry3d odom_after_local;             // odometry after local mapping
   double accum_distance;                          // accumulated distance from the first node (by scan_matching_odometry)
   pcl::PointCloud<PointT>::ConstPtr cloud;        // point cloud
   cv::Mat descriptor;                          // image

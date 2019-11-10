@@ -68,9 +68,12 @@ private:
   double keyframe_delta_trans;      //
   double keyframe_delta_angle;      //
 
-  bool is_first;
+  //bool is_first;
   double accum_distance;
   Eigen::Isometry3d prev_keypose;
+  
+public:
+    bool is_first;
 };
 
 }

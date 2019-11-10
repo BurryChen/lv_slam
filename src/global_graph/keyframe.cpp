@@ -14,7 +14,9 @@ KeyFrame::KeyFrame(const ros::Time& stamp, const Eigen::Isometry3d& odom, double
     accum_distance(accum_distance),
     cloud(cloud),
     node(nullptr)
-{}
+{
+  odom_after_local=Eigen::Isometry3d::Identity();
+}
 
 KeyFrame::KeyFrame(const ros::Time& stamp, const int& seq, const Eigen::Isometry3d& odom, double accum_distance, const pcl::PointCloud<PointT>::ConstPtr& cloud,const cv::Mat& descriptor)
   : stamp(stamp),
@@ -24,7 +26,9 @@ KeyFrame::KeyFrame(const ros::Time& stamp, const int& seq, const Eigen::Isometry
     cloud(cloud),
     descriptor(descriptor),
     node(nullptr)
-{}
+{
+  odom_after_local=Eigen::Isometry3d::Identity();
+}
 
 KeyFrame::KeyFrame(const std::string& directory, g2o::HyperGraph* graph)
     : stamp(),

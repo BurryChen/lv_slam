@@ -94,5 +94,5 @@ add_subdirectory(src/lidar_odometry)
 add_subdirectory(src/work_flow)
 add_subdirectory(test)
 
-add_subdirectory(src/local_odometry)
+add_subdirectory(src/local_mapping)
 add_subdirectory(src/global_graph)

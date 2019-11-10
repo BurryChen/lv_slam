@@ -14,8 +14,8 @@
   <class name="lidar_odometry/ScanMatchingOdomNodelet" type="lidar_odometry::ScanMatchingOdomNodelet" base_class_type="nodelet::Nodelet" />
 </library>
 
-<library path="lib/liblocal_odometry_nodelet">
-  <class name="lv_slam/LocalOdometryNodelet" type="lv_slam::LocalOdometryNodelet" base_class_type="nodelet::Nodelet" />
+<library path="lib/liblocal_mapping_nodelet">
+  <class name="lv_slam/LocalMappingNodelet" type="lv_slam::LocalMappingNodelet" base_class_type="nodelet::Nodelet" />
 </library>
 
 <library path="lib/libglobal_graph_nodelet">
