@@ -57,13 +57,13 @@ public:
     initialize_params();
 
     // subscribers
-    odom_sub.reset(new message_filters::Subscriber<nav_msgs::Odometry>(mt_nh, "/odom", 256));
-    cloud_sub.reset(new message_filters::Subscriber<sensor_msgs::PointCloud2>(mt_nh, "/filtered_points", 256));
-    sync.reset(new message_filters::TimeSynchronizer<nav_msgs::Odometry, sensor_msgs::PointCloud2>(*odom_sub, *cloud_sub, 256));
+    odom_sub.reset(new message_filters::Subscriber<nav_msgs::Odometry>(mt_nh, "/odom", 512));
+    cloud_sub.reset(new message_filters::Subscriber<sensor_msgs::PointCloud2>(mt_nh, "/filtered_points", 512));
+    sync.reset(new message_filters::TimeSynchronizer<nav_msgs::Odometry, sensor_msgs::PointCloud2>(*odom_sub, *cloud_sub, 512));
     sync->registerCallback(boost::bind(&LocalMappingNodelet::cloud_callback, this, _1, _2));
     
-    //points_sub = nh.subscribe("/filtered_points", 256, &LocalMappingNodelet::cloud_callback, this);
-    read_until_pub = nh.advertise<std_msgs::Header>("/scan_matching_odom/read_until", 256);
+    //points_sub = nh.subscribe("/filtered_points", 512, &LocalMappingNodelet::cloud_callback, this);
+    read_until_pub = nh.advertise<std_msgs::Header>("/scan_matching_odom/read_until", 512);
     odom_pub = nh.advertise<nav_msgs::Odometry>("/odom_after_local", 256);
   }
 
@@ -90,11 +90,16 @@ private:
     fin>>tmp>>tf_velo2cam(0,0)>>tf_velo2cam(0,1)>>tf_velo2cam(0,2)>>tf_velo2cam(0,3)
     >>tf_velo2cam(1,0)>>tf_velo2cam(1,1)>>tf_velo2cam(1,2)>>tf_velo2cam(1,3)
     >>tf_velo2cam(2,0)>>tf_velo2cam(2,1)>>tf_velo2cam(2,2)>>tf_velo2cam(2,3); 
-      
+    
+    //registration parameters
+    reg_s2s.setResolution(1.0);
+    reg_s2s.setNumThreads(8);
+    reg_s2s.setNeighborhoodSearchMethod(pclpca::DIRECT1);
+    reg_s2s.setTransformationEpsilon(0.01);
+    reg_s2s.setMaximumIterations(64);
+    
     //输出 odom tf_
     Eigen::Matrix4d odom=Eigen::Matrix4d::Identity();
-    odom_velo=Eigen::Matrix4d::Identity();
-    tf_s2k_error=Eigen::Matrix4d::Identity();
     fp_odom = fopen(odom_file.c_str(),"w+");
     fprintf(fp_odom,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
 	    odom(0,0),odom(0,1),odom(0,2),odom(0,3),
@@ -176,25 +181,40 @@ private:
     for(int i=0; i<frame_queue.size(); i++) {
       const auto& cur_frame = frame_queue[i];
       cur_frame->node=graph_slam->add_se3_node(cur_frame->odom);
-      if(i==0) cur_frame->node->setFixed(true);
-    }
-    //add edge to local graph
-    for(int i=0; i<frame_queue.size(); i++) {  
-      const auto& cur_frame = frame_queue[i];
-      int prev_seq;
       if(i==0) 
       {
-	prev_seq=frame_queue.size()- 1;	
+	//std::cout<<"setFixed(true) "<<i<<std::endl;
+	cur_frame->node->setFixed(true);
       }
-      else 
+    }
+    
+    /*//add edge to local graph
+    for(int i=0; i<frame_queue.size(); i++) {  
+      const auto& fi = frame_queue[i];
+      for(int j=i+1; j<frame_queue.size(); j++)
       {
-	prev_seq=i - 1;	
+	const auto& fj =  frame_queue[j];     
+        Eigen::Isometry3d relative_pose = fi->odom.inverse() * fj->odom;
+        Eigen::MatrixXd information = inf_calclator->calc_information_matrix(fj->cloud, fi->cloud, relative_pose);
+        //std::cout<<i<<" "<<prev_seq<<std::endl<<relative_pose.matrix()<<std::endl<<information<<std::endl;
+        auto edge = graph_slam->add_se3_edge(fi->node, fj->node, relative_pose, information);
+        graph_slam->add_robust_kernel(edge, private_nh.param<std::string>("odometry_edge_robust_kernel", "NONE"), private_nh.param<double>("odometry_edge_robust_kernel_size", 1.0));
+      }    
+    }*/
+    
+    //add edge to local graph
+    for(int i=0; i<frame_queue.size(); i++) {  
+      const auto& fi = frame_queue[i];
+      int j=i+1;
+      if(i==frame_queue.size()-1) 
+      {
+	j=0;	
       }
-      const auto& prev_frame =  frame_queue[prev_seq];     
-      Eigen::Isometry3d relative_pose = cur_frame->odom.inverse() * prev_frame->odom;
-      Eigen::MatrixXd information = inf_calclator->calc_information_matrix(prev_frame->cloud, cur_frame->cloud, relative_pose);
+      const auto& fj =  frame_queue[j];     
+      Eigen::Isometry3d relative_pose = fi->odom.inverse() * fj->odom;
+      Eigen::MatrixXd information = inf_calclator->calc_information_matrix(fj->cloud, fi->cloud, relative_pose);
       //std::cout<<i<<" "<<prev_seq<<std::endl<<relative_pose.matrix()<<std::endl<<information<<std::endl;
-      auto edge = graph_slam->add_se3_edge(cur_frame->node, prev_frame->node, relative_pose, information);
+      auto edge = graph_slam->add_se3_edge(fi->node, fj->node, relative_pose, information);
       graph_slam->add_robust_kernel(edge, private_nh.param<std::string>("odometry_edge_robust_kernel", "NONE"), private_nh.param<double>("odometry_edge_robust_kernel_size", 1.0));
     }
     
@@ -250,7 +270,6 @@ private:
   ros::Subscriber points_sub;
   ros::Publisher odom_pub;
   tf::TransformBroadcaster odom_broadcaster;
-  tf::TransformBroadcaster keyframe_broadcaster;
 
   std::string odom_frame_id;
   ros::Publisher read_until_pub;
@@ -259,32 +278,13 @@ private:
   double keyframe_delta_trans;  // minimum distance between keyframes
   double keyframe_delta_angle;  //
   double keyframe_delta_time;   //
-  
-  // odometry calculation
-  Eigen::Matrix4d prev_trans;                  // previous estimated transform from keyframe
-  Eigen::Matrix4d keyframe_pose;               // keyframe pose
-  ros::Time keyframe_stamp;                    // keyframe time
-  pcl::PointCloud<PointT>::ConstPtr keyframe;  // keyframe point cloud
-  pcl::PointCloud<PointT>::ConstPtr lastframe;  // lastframe point cloud
-  Eigen::Matrix4d lastframe_pose;               // lastframe pose
 
-  //
-  pcl::Registration<PointT, PointT>::Ptr registration;
-  
-  //odom pose file with KITTI calibration tf_cal
-  pclpca::NormalDistributionsTransform<PointT, PointT> reg_s2s, reg_s2k;
-  pclomp_ground::NormalDistributionsTransformGround<PointT, PointT> ground_s2k;
+  // local mapping 
+  pclpca::NormalDistributionsTransform<PointT, PointT> reg_s2s;
   FILE *fp_odom;
   Eigen::Matrix4d tf_velo2cam;
-  ros::WallTime last_t;
-  Eigen::Matrix4d guess_trans;                  //init guess for mathing
-  int scan_count,key_id,key_interval;
-  pcl::PointCloud<PointT>::ConstPtr filtered,key;
-  Eigen::Matrix4d tf_s2s,tf_s2k,key_pose,pre_tf_s2k;
-  Eigen::Matrix4d odom_velo,tf_s2k_error;
-  vector<Eigen::Matrix4d> poses_cam,poses_velo;
   
-  pcl::PointCloud<PointT> localmap;            // localmap point cloud
+  pcl::PointCloud<PointT> localmap;            
   std::unique_ptr<KeyframeUpdater> frame_updater;
   std::mutex frame_queue_mutex;
   std::deque<KeyFrame::Ptr> frame_queue;       //vector会使内存线性增长

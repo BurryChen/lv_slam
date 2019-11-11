@@ -73,8 +73,8 @@
     <param name="odometry_edge_robust_kernel" value="Huber" />
     <param name="odometry_edge_robust_kernel_size" value="1.0" />
     <param name="use_const_inf_matrix" value="true" />  <!--true则权重一致，false则建立以fitness为自变量对应RT的标准差为参数的求权函数-->
-    <param name="const_stddev_x" value="0.5" />
-    <param name="const_stddev_q" value="0.1" />
+    <param name="const_stddev_x" value="0.0001" />
+    <param name="const_stddev_q" value="0.0001" />
   </node>
 
   <group if="$(arg rviz)">
