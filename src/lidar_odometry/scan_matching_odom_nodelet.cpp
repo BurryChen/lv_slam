@@ -72,15 +72,12 @@ private:
     keyframe_delta_time = pnh.param<double>("keyframe_delta_time", 1.0);
     
     // load calib /ground truth file and build output file
-    string res_dir = pnh.param<std::string>("res_dir", "/home/whu/data/ndt_odom_KITTI");
-    string seq = pnh.param<std::string>("seq", "04");
-    std::cout<<"res_dir= "<<res_dir<<std::endl;
-    std::cout<<"seq= "<<seq<<std::endl;
-    std::string calibdir="/media/whu/HD_CHEN_2T/02data/KITTI_odometry/dataset/sequences/"+seq+"/calib.txt";
-    std::string gt_file="/home/whu/data/data_source_KITTI/devkit_old/cpp/data/poses/"+seq+".txt";
-    std::string odom_file=res_dir+"/data/KITTI_"+seq+"_odom.txt";
-    std::string scan_error_file=res_dir+"/errors/KITTI_"+seq+"_scan_error.txt";
-    ifstream fin ( calibdir );
+    string calib_file = pnh.param<std::string>("calib_file"," ");
+    string odom_file = pnh.param<std::string>("odom_file"," ");
+    std::cout<<"calib_file= "<<calib_file<<std::endl;
+    std::cout<<"odom_file= "<<odom_file<<std::endl;
+    
+    ifstream fin ( calib_file );
     string tmp;
     for(int i=0;i<4;i++)getline(fin,tmp);
     tf_velo2cam.setIdentity();
@@ -88,7 +85,9 @@ private:
     >>tf_velo2cam(1,0)>>tf_velo2cam(1,1)>>tf_velo2cam(1,2)>>tf_velo2cam(1,3)
     >>tf_velo2cam(2,0)>>tf_velo2cam(2,1)>>tf_velo2cam(2,2)>>tf_velo2cam(2,3);
     
-    FILE *fp = fopen(gt_file.c_str(),"r");
+    //std::string gt_file="/media/whu/HD_CHEN_2T/02data/KITTI_odometry/dataset/poses/"+seq+".txt";
+    //std::string scan_error_file=res_dir+"/errors/KITTI_"+seq+"_scan_error.txt";
+    /*FILE *fp = fopen(gt_file.c_str(),"r");
     if (fp) {
     while (!feof(fp)) {
       Eigen::Matrix4d p=Eigen::Matrix4d::Identity();
@@ -101,44 +100,36 @@ private:
       }
     }
     fclose(fp);
-    }  
+    }
+     = fopen(scan_error_file.c_str(),"w+");
+    */  
   
     //registration parameters
     std::cout << "--- reg_s2s,reg_s2k=pcl::NDT_OMP ---" << std::endl;
     reg_s2s.setResolution(1.0);
-    reg_s2s.setNumThreads(8);
+    reg_s2s.setNumThreads(4);
     reg_s2s.setNeighborhoodSearchMethod(pclpca::DIRECT1);
     reg_s2s.setTransformationEpsilon(0.01);
     reg_s2s.setMaximumIterations(64);
     
     reg_s2k.setResolution(1.0);
-    reg_s2k.setNumThreads(8);
+    reg_s2k.setNumThreads(4);
     reg_s2k.setNeighborhoodSearchMethod(pclpca::DIRECT1);
     reg_s2k.setTransformationEpsilon(0.01);
     reg_s2k.setMaximumIterations(64);
   
     // ground_s2k
     ground_s2k.setResolution(10.0);
-    ground_s2k.setNumThreads(8);
+    ground_s2k.setNumThreads(4);
     ground_s2k.setNeighborhoodSearchMethod(pclomp_ground::DIRECT1);
     ground_s2k.setTransformationEpsilon(0.01);
     ground_s2k.setMaximumIterations(64);
       
     //输出 odom tf_s2k_error
-    Eigen::Matrix4d odom=Eigen::Matrix4d::Identity();
     odom_velo=Eigen::Matrix4d::Identity();
     tf_s2k_error=Eigen::Matrix4d::Identity();
     fp_odom = fopen(odom_file.c_str(),"w+");
-    fprintf(fp_odom,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
-	    odom(0,0),odom(0,1),odom(0,2),odom(0,3),
-	    odom(1,0),odom(1,1),odom(1,2),odom(1,3),
-	    odom(2,0),odom(2,1),odom(2,2),odom(2,3));
-    fp_scan_error = fopen(scan_error_file.c_str(),"w+");
-    fprintf(fp_scan_error,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
-	    tf_s2k_error(0,0),tf_s2k_error(0,1),tf_s2k_error(0,2),tf_s2k_error(0,3),
-	    tf_s2k_error(1,0),tf_s2k_error(1,1),tf_s2k_error(1,2),tf_s2k_error(1,3),
-	    tf_s2k_error(2,0),tf_s2k_error(2,1),tf_s2k_error(2,2),tf_s2k_error(2,3)); 
-  
+    
     scan_count=0;
     key_id=0,key_interval=10;
     
@@ -158,6 +149,24 @@ private:
     pcl::fromROSMsg(*cloud_msg, *cloud);
 
     Eigen::Matrix4d pose = matching_s2k(cloud_msg->header.stamp, cloud);//base系在odom系下的变换（odom=第一帧keyframe的base）
+    //elevation
+    Sophus::SE3 SE3_Rt(tf_s2k_error.block(0,0,3,3),tf_s2k_error.block(0,3,3,1)); 
+    //output
+    Eigen::Matrix4d odom=tf_velo2cam*pose*tf_velo2cam.inverse();
+    fprintf(fp_odom,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
+	    odom(0,0),odom(0,1),odom(0,2),odom(0,3),
+	    odom(1,0),odom(1,1),odom(1,2),odom(1,3),
+	    odom(2,0),odom(2,1),odom(2,2),odom(2,3));
+    
+    /*if(poses_cam.size()!=0){
+    Eigen::Matrix4d odom_error=poses_cam[scan_count].inverse()*odom;
+    Sophus::SE3 SE3_Rt2(odom_error.block(0,0,3,3),odom_error.block(0,3,3,1));
+    //std::cout<<"odom_error_cam: "<<SE3_Rt2.log().transpose()<<std::endl;  
+    fprintf(fp_scan_error,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
+	    tf_s2k_error(0,0),tf_s2k_error(0,1),tf_s2k_error(0,2),tf_s2k_error(0,3),
+	    tf_s2k_error(1,0),tf_s2k_error(1,1),tf_s2k_error(1,2),tf_s2k_error(1,3),
+	    tf_s2k_error(2,0),tf_s2k_error(2,1),tf_s2k_error(2,2),tf_s2k_error(2,3));
+    }*/    
     publish_odometry(cloud_msg->header.stamp, cloud_msg->header.frame_id, pose);
     scan_count++;
     
@@ -267,34 +276,13 @@ private:
       key_pose=odom_velo;
       keyframe_stamp=stamp;
     }
-    
-    //elevation
-    Sophus::SE3 SE3_Rt(tf_s2k_error.block(0,0,3,3),tf_s2k_error.block(0,3,3,1));
-    std::cout<<"tf_s2k_error_velo: "<<SE3_Rt.log().transpose()<<std::endl;  
-    
-    //output
-    Eigen::Matrix4d odom=tf_velo2cam*odom_velo*tf_velo2cam.inverse();
-    fprintf(fp_odom,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
-	    odom(0,0),odom(0,1),odom(0,2),odom(0,3),
-	    odom(1,0),odom(1,1),odom(1,2),odom(1,3),
-	    odom(2,0),odom(2,1),odom(2,2),odom(2,3));
-    
-    if(poses_cam.size()!=0){
-    Eigen::Matrix4d odom_error=poses_cam[scan_count].inverse()*odom;
-    Sophus::SE3 SE3_Rt2(odom_error.block(0,0,3,3),odom_error.block(0,3,3,1));
-    std::cout<<"odom_error_cam: "<<SE3_Rt2.log().transpose()<<std::endl;  
-    fprintf(fp_scan_error,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
-	    tf_s2k_error(0,0),tf_s2k_error(0,1),tf_s2k_error(0,2),tf_s2k_error(0,3),
-	    tf_s2k_error(1,0),tf_s2k_error(1,1),tf_s2k_error(1,2),tf_s2k_error(1,3),
-	    tf_s2k_error(2,0),tf_s2k_error(2,1),tf_s2k_error(2,2),tf_s2k_error(2,3));
-    }
  
     //screet print 
     auto t2 = ros::WallTime::now();
     std::cout << "--t: "<< (t2 - last_t).toSec() <<std::endl;
     last_t=t2;
     
-    return odom;
+    return odom_velo;
   }
 
    /**
@@ -320,6 +308,7 @@ private:
       return Eigen::Matrix4d::Identity();
     }
     
+    last_t = ros::WallTime::now();
     pcl::PointCloud<PointT>::Ptr matched(new pcl::PointCloud<PointT>());
     
     //s2k
@@ -362,32 +351,11 @@ private:
     }
     pre_tf_s2k=tf_s2k;
     guess_trans=pre_tf_s2k*tf_s2s;
-    
-    //elevation
-    Sophus::SE3 SE3_Rt(tf_s2k_error.block(0,0,3,3),tf_s2k_error.block(0,3,3,1));
-    //std::cout<<"tf_s2k_error_velo: "<<SE3_Rt.log().transpose()<<std::endl;  
-    
-    //output
-    Eigen::Matrix4d odom=tf_velo2cam*odom_velo*tf_velo2cam.inverse();
-    fprintf(fp_odom,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
-	    odom(0,0),odom(0,1),odom(0,2),odom(0,3),
-	    odom(1,0),odom(1,1),odom(1,2),odom(1,3),
-	    odom(2,0),odom(2,1),odom(2,2),odom(2,3));
-    
-    if(poses_cam.size()!=0){
-    Eigen::Matrix4d odom_error=poses_cam[scan_count].inverse()*odom;
-    Sophus::SE3 SE3_Rt2(odom_error.block(0,0,3,3),odom_error.block(0,3,3,1));
-    //std::cout<<"odom_error_cam: "<<SE3_Rt2.log().transpose()<<std::endl;  
-    fprintf(fp_scan_error,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
-	    tf_s2k_error(0,0),tf_s2k_error(0,1),tf_s2k_error(0,2),tf_s2k_error(0,3),
-	    tf_s2k_error(1,0),tf_s2k_error(1,1),tf_s2k_error(1,2),tf_s2k_error(1,3),
-	    tf_s2k_error(2,0),tf_s2k_error(2,1),tf_s2k_error(2,2),tf_s2k_error(2,3));
-    }
  
     //screet print 
     auto t2 = ros::WallTime::now();
-    //std::cout << "--t: "<< (t2 - last_t).toSec() <<std::endl;
-    last_t=t2;
+    std::cout << "-----t: "<< (t2 - last_t).toSec() <<std::endl;
+    //last_t=t2;
     
     return odom_velo;
   }
@@ -467,34 +435,13 @@ private:
     }
     pre_tf_s2k=tf_s2k;
     guess_trans=pre_tf_s2k*tf_s2s;
-    
-    //elevation
-    Sophus::SE3 SE3_Rt(tf_s2k_error.block(0,0,3,3),tf_s2k_error.block(0,3,3,1));
-    std::cout<<"tf_s2k_error_velo: "<<SE3_Rt.log().transpose()<<std::endl;  
-    
-    //output
-    Eigen::Matrix4d odom=tf_velo2cam*odom_velo*tf_velo2cam.inverse();
-    fprintf(fp_odom,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
-	    odom(0,0),odom(0,1),odom(0,2),odom(0,3),
-	    odom(1,0),odom(1,1),odom(1,2),odom(1,3),
-	    odom(2,0),odom(2,1),odom(2,2),odom(2,3));
-    
-    if(poses_cam.size()!=0){
-    Eigen::Matrix4d odom_error=poses_cam[scan_count].inverse()*odom;
-    Sophus::SE3 SE3_Rt2(odom_error.block(0,0,3,3),odom_error.block(0,3,3,1));
-    std::cout<<"odom_error_cam: "<<SE3_Rt2.log().transpose()<<std::endl;  
-    fprintf(fp_scan_error,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
-	    tf_s2k_error(0,0),tf_s2k_error(0,1),tf_s2k_error(0,2),tf_s2k_error(0,3),
-	    tf_s2k_error(1,0),tf_s2k_error(1,1),tf_s2k_error(1,2),tf_s2k_error(1,3),
-	    tf_s2k_error(2,0),tf_s2k_error(2,1),tf_s2k_error(2,2),tf_s2k_error(2,3));
-    }
  
     //screet print 
     auto t2 = ros::WallTime::now();
     std::cout << "--t: "<< (t2 - last_t).toSec() <<std::endl;
     last_t=t2;
     
-    return odom;
+    return odom_velo;
   }
   
       /**
@@ -563,31 +510,13 @@ private:
       tf_s2k.setIdentity();
       key_pose=odom_velo;
     }
-    
-    //elevation
-    Sophus::SE3 SE3_Rt(tf_s2k_error.block(0,0,3,3),tf_s2k_error.block(0,3,3,1));
-    std::cout<<"tf_s2k_error_velo: "<<SE3_Rt.log().transpose()<<std::endl;  
-    
-    //output
-    Eigen::Matrix4d odom=tf_velo2cam*odom_velo*tf_velo2cam.inverse();
-    Eigen::Matrix4d odom_error=poses_cam[scan_count].inverse()*odom;
-    Sophus::SE3 SE3_Rt2(odom_error.block(0,0,3,3),odom_error.block(0,3,3,1));
-    std::cout<<"odom_error_cam: "<<SE3_Rt2.log().transpose()<<std::endl;  
-    fprintf(fp_odom,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
-	    odom(0,0),odom(0,1),odom(0,2),odom(0,3),
-	    odom(1,0),odom(1,1),odom(1,2),odom(1,3),
-	    odom(2,0),odom(2,1),odom(2,2),odom(2,3));
-    fprintf(fp_scan_error,"%le %le %le %le %le %le %le %le %le %le %le %le\n",
-	    tf_s2k_error(0,0),tf_s2k_error(0,1),tf_s2k_error(0,2),tf_s2k_error(0,3),
-	    tf_s2k_error(1,0),tf_s2k_error(1,1),tf_s2k_error(1,2),tf_s2k_error(1,3),
-	    tf_s2k_error(2,0),tf_s2k_error(2,1),tf_s2k_error(2,2),tf_s2k_error(2,3));   
  
     //screet print 
     auto t2 = ros::WallTime::now();
     std::cout << "--t: "<< (t2 - last_t).toSec() <<std::endl;
     last_t=t2;
     
-    return odom;
+    return odom_velo;
   }
   
   /**

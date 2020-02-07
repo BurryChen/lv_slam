@@ -17,6 +17,8 @@
 #include <pcl_ros/point_cloud.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
+#include <message_filters/synchronizer.h>
+#include <message_filters/sync_policies/approximate_time.h>
 #include <tf_conversions/tf_eigen.h>
 #include <tf/transform_listener.h>
 
@@ -59,6 +61,7 @@ namespace lv_slam {
 class GlobalGraphNodelet : public nodelet::Nodelet {
 public:
   typedef pcl::PointXYZI PointT;
+  typedef message_filters::sync_policies::ApproximateTime<nav_msgs::Odometry, sensor_msgs::PointCloud2,sensor_msgs::Image> MySyncPolicy;
 
   GlobalGraphNodelet() {}
   virtual ~GlobalGraphNodelet() {}
@@ -100,12 +103,16 @@ public:
 
     points_topic = private_nh.param<std::string>("points_topic", "/velodyne_points");
 
-    // subscribers
-    odom_sub.reset(new message_filters::Subscriber<nav_msgs::Odometry>(mt_nh, "/odom", 256));
+    // subscribers 
+    string odom_topic = private_nh.param<std::string>("odom_topic", "/odom");
+    odom_sub.reset(new message_filters::Subscriber<nav_msgs::Odometry>(mt_nh, odom_topic, 256));   
+    //odom_sub.reset(new message_filters::Subscriber<nav_msgs::Odometry>(mt_nh, "/aft_mapped_to_init_high_frec", 256)); 
     cloud_sub.reset(new message_filters::Subscriber<sensor_msgs::PointCloud2>(mt_nh, "/filtered_points", 256));
-    img_sub.reset(new message_filters::Subscriber<sensor_msgs::Image>(mt_nh, "/camera/left/image_raw", 256));
-    sync.reset(new message_filters::TimeSynchronizer<nav_msgs::Odometry, sensor_msgs::PointCloud2,sensor_msgs::Image>(*odom_sub, *cloud_sub,*img_sub, 256));
-    sync->registerCallback(boost::bind(&GlobalGraphNodelet::cloud_callback, this, _1, _2,_3));
+    string img_topic = private_nh.param<std::string>("img_topic", "/camera/left/image_raw");
+    img_sub.reset(new message_filters::Subscriber<sensor_msgs::Image>(mt_nh, img_topic, 256));
+    //img_sub.reset(new message_filters::Subscriber<sensor_msgs::Image>(mt_nh, "/mynteye/left/image_color", 256));
+    sync2.reset(new  message_filters::Synchronizer<MySyncPolicy>(MySyncPolicy(256), *odom_sub, *cloud_sub,*img_sub));
+    sync2->registerCallback(boost::bind(&GlobalGraphNodelet::cloud_callback,this, _1, _2,_3));
     imu_sub = nh.subscribe("/gpsimu_driver/imu_data", 1024, &GlobalGraphNodelet::imu_callback, this);
     floor_sub = nh.subscribe("/floor_detection/floor_coeffs", 1024, &GlobalGraphNodelet::floor_coeffs_callback, this);
 
@@ -128,18 +135,9 @@ public:
     double graph_update_interval = private_nh.param<double>("graph_update_interval", 3.0);
     double map_cloud_update_interval = private_nh.param<double>("map_cloud_update_interval", 10.0);
     optimization_timer = mt_nh.createWallTimer(ros::WallDuration(graph_update_interval), &GlobalGraphNodelet::optimization_timer_callback, this);
-    map_publish_timer = mt_nh.createWallTimer(ros::WallDuration(map_cloud_update_interval), &GlobalGraphNodelet::map_points_publish_timer_callback, this);
-    
-    //世界坐标系map,以第一帧velo为基准建立，而kitti ground truth 是以第一帧camera为世界坐标系的velo pose，需要世界系calibration参数
-    Eigen::Matrix4d mat;
-    mat<<      
-     4.276802385584e-04, -9.999672484946e-01, -8.084491683471e-03,-1.198459927713e-02,
-    -7.210626507497e-03,  8.081198471645e-03, -9.999413164504e-01,-5.403984729748e-02, 
-     9.999738645903e-01,  4.859485810390e-04, -7.206933692422e-03,-2.921968648686e-01,
-      0,0,0,1;
-     tf_velo2cam=mat.cast<double>();
-     //tf_velo2cam.setIdentity();*/
-     std::cout<<"### global_graph init done! "<<std::endl;
+    //map_publish_timer = mt_nh.createWallTimer(ros::WallDuration(map_cloud_update_interval), &GlobalGraphNodelet::map_points_publish_timer_callback, this);
+       
+    std::cout<<"### global_graph init done! "<<std::endl;
   }
 
 private:
@@ -554,6 +552,11 @@ private:
 
     sensor_msgs::PointCloud2Ptr cloud_msg(new sensor_msgs::PointCloud2());
     pcl::toROSMsg(*cloud, *cloud_msg);
+    
+    std::vector<KeyFrameSnapshot::Ptr>().swap(snapshot);
+    cout << "snapshot.capacity()="<<snapshot.capacity() << endl;
+    cloud->clear();
+    cout << "cloud.capacity()="<<cloud->size() << endl;
 
     map_points_pub.publish(cloud_msg);
   }
@@ -611,7 +614,8 @@ private:
     trans_odom2map = trans.matrix().cast<float>();//两种不同类型的Eigen矩阵相加，或者赋值，需要用到cast函数：
     trans_odom2map_mutex.unlock();
 
-    if(map_points_pub.getNumSubscribers()) {//如果有结果mapping订阅就发布
+    //if(map_points_pub.getNumSubscribers()) {//如果有结果mapping订阅就发布
+    if(1) {//无结果mapping订阅也发布
       std::vector<KeyFrameSnapshot::Ptr> snapshot(keyframes.size());
       std::transform(keyframes.begin(), keyframes.end(), snapshot.begin(),
         [=](const KeyFrame::Ptr& k) {
@@ -620,8 +624,21 @@ private:
 
     keyframes_snapshot_mutex.lock();
     keyframes_snapshot.swap(snapshot);
-    }
     keyframes_snapshot_mutex.unlock();
+    
+    auto cloud = map_cloud_generator->generate(snapshot, map_cloud_resolution);
+    if(!cloud) {
+      return;
+    }
+
+    cloud->header.frame_id = map_frame_id;
+    cloud->header.stamp = snapshot.back()->cloud->header.stamp;
+    cout << "map_points.size="<<cloud->size() << endl;
+
+    sensor_msgs::PointCloud2Ptr cloud_msg(new sensor_msgs::PointCloud2());
+    pcl::toROSMsg(*cloud, *cloud_msg);
+    map_points_pub.publish(cloud_msg);   
+    }   
 
     if(odom2map_pub.getNumSubscribers()) { //pub tf_odom2map
       geometry_msgs::TransformStamped ts = matrix2transform(keyframe->stamp, trans.matrix().cast<float>(), map_frame_id, odom_frame_id);
@@ -926,7 +943,18 @@ private:
    * @return
    */
   void save_pose(std::string directory) {
-    std::ofstream pose_keyframe_ofs(directory + "/KITTI_0X_kf.txt");
+    // load calib  file
+    string calib_file = private_nh.param<std::string>("calib_file"," ");
+    std::cout<<"calib_file= "<<calib_file<<std::endl;  
+    ifstream fin ( calib_file );
+    string tmp;
+    for(int i=0;i<4;i++)getline(fin,tmp);
+    tf_velo2cam.setIdentity();
+    fin>>tmp>>tf_velo2cam(0,0)>>tf_velo2cam(0,1)>>tf_velo2cam(0,2)>>tf_velo2cam(0,3)
+    >>tf_velo2cam(1,0)>>tf_velo2cam(1,1)>>tf_velo2cam(1,2)>>tf_velo2cam(1,3)
+    >>tf_velo2cam(2,0)>>tf_velo2cam(2,1)>>tf_velo2cam(2,2)>>tf_velo2cam(2,3);
+    
+    std::ofstream pose_keyframe_ofs(directory + "/ggo_kf_odom.txt");
     for(int i=0; i<keyframes.size(); i++) {
       Eigen::Isometry3d pose = keyframes[i]->node->estimate();
       // pose:the pose of left camera coordinate system in the i'th frame with respect to the first(=0th) frame
@@ -938,7 +966,7 @@ private:
 	    % data(2,0)% data(2,1)% data(2,2)% data(2,3);
     }
     
-    std::ofstream pose_global_ofs(directory + "/KITTI_0X_global.txt");
+    std::ofstream pose_global_ofs(directory + "/ggo_wf_odom.txt");
     Eigen::Isometry3d pose_align=keyframes[0]->node->estimate().inverse();
     for(int i=0; i<keyframes.size(); i++) {   
       int seq0=keyframes[i]->seq;
@@ -995,6 +1023,7 @@ private:
   std::unique_ptr<message_filters::Subscriber<sensor_msgs::PointCloud2>> cloud_sub;
   std::unique_ptr<message_filters::Subscriber<sensor_msgs::Image>> img_sub;
   std::unique_ptr<message_filters::TimeSynchronizer<nav_msgs::Odometry, sensor_msgs::PointCloud2,sensor_msgs::Image>> sync;//时间同步器
+  std::unique_ptr<message_filters::Synchronizer<MySyncPolicy>> sync2;
 
   ros::Subscriber gps_sub;
   ros::Subscriber nmea_sub;
