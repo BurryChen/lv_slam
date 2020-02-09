@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- lfa -->  
+    <param name="scan_line" type="int" value="64" />
+    <!-- if 1, do mapping 10 Hz, if 2, do mapping 5 Hz. Suggest to use 1, it will adjust frequence automaticlly -->
+    <param name="mapping_skip_frame" type="int" value="1" />
+    <!-- remove too closed points -->
+    <param name="minimum_range" type="double" value="5"/>
+    <param name="mapping_line_resolution" type="double" value="0.4"/>
+    <param name="mapping_plane_resolution" type="double" value="0.8"/>
+    <node pkg="aloam_velodyne" type="ascanRegistration" name="ascanRegistration" output="screen" />
+    <node pkg="aloam_velodyne" type="alaserOdometry" name="alaserOdometry" output="screen" />
+    <node pkg="aloam_velodyne" type="alaserMapping" name="alaserMapping" output="screen" />
+    <!-- 
+    <group if="$(arg rviz)">
+        <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz2" args="-d $(find aloam_velodyne)/rviz_cfg/aloam_velodyne.rviz" />
+    </group>
+    -->
+
+    <node name="kittiHelper" pkg="aloam_velodyne" type="kittiHelper" output="screen"> 
+        <param name="dataset_folder" type="string" value="/media/whu/HD_CHEN_2T/02data/KITTI_odometry/dataset/" />
+	<param name="calib_file" type="string" value="$(arg calib_file)" /> 
+        <param name="sequence_number" type="string" value="$(arg seq)" />
+        <param name="to_bag" type="bool" value="false" />
+        <param name="output_bag_file" type="string" value="/home/whu/data/aloam_kitti/kitti_0x_aloam.bag" /> <!-- replace with your output folder -->
+        <param name="publish_delay" type="int" value="1" />
+        <param name="output_path" type="string" value="$(arg lfa_output_path)" />
+    </node>
+  
+  
+</launch>

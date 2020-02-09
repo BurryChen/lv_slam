@@ -214,13 +214,13 @@ private:
     }
     DBoW3::QueryResults ret;
     db_temp.query(new_keyframe->descriptor,ret,5);
-    std::cout<<candidate_keyframes.size()<<"loop dectection for "<<new_keyframe->seq<<std::endl<<std::endl;
+    std::cout<<candidate_keyframes.size()<<"loop dectection for "<<new_keyframe->seq<<std::endl<<ret<<std::endl;
     
     for(int i=0;i<ret.size();i++)
     {
-      if(ret[i]<0.05||best_score<=fitness_score_thresh) break;
+      if(ret[i]<0.04||best_score<=fitness_score_thresh) break;
       std::cout<<ret[i]<<ret[i].Id<<std::endl;
-      int best_id=ret[0].Id;
+      int best_id=ret[i].Id;
       best_matched=candidate_keyframes[best_id];
       registration->setInputSource(best_matched->cloud);
       Eigen::Matrix4f guess = (new_keyframe->node->estimate().inverse() * best_matched->node->estimate()).matrix().cast<float>();

@@ -10,6 +10,7 @@
 #include <boost/algorithm/string.hpp>
 #include <Eigen/Dense>
 #include <pcl/io/pcd_io.h>
+#include <pcl/filters/voxel_grid.h>
 
 #include <ros/ros.h>
 #include <geodesy/utm.h>
@@ -159,7 +160,7 @@ private:
     }
      
     odoms.insert(std::pair<int,Eigen::Isometry3d>(seq, odom));
-    //和pre keyframe 平移旋转量太小，跳过，不选为keyframe
+    /*//和pre keyframe 平移旋转量太小，跳过，不选为keyframe
     if(!keyframe_updater->update(odom)) {
       std::lock_guard<std::mutex> lock(keyframe_queue_mutex);
       if(keyframe_queue.empty()) {
@@ -188,7 +189,51 @@ private:
     KeyFrame::Ptr keyframe(new KeyFrame(stamp,seq,odom, accum_d, cloud,descriptor));
 
     std::lock_guard<std::mutex> lock(keyframe_queue_mutex);
-    keyframe_queue.push_back(keyframe);   //关键帧队列
+    keyframe_queue.push_back(keyframe);   //关键帧队列*/
+    
+    // window map 作为keyframe
+    if(keyframe_updater->is_first&&keyframe_updater->update(odom))
+    {
+      w_odom=odom;
+      w_cloud.clear();
+      w_cloud=*cloud; 
+      w_img=*img_msg;
+      accum_d = keyframe_updater->get_accum_distance();  
+      //std::cout<<seq<<" start "<<cloud->size()<<" "<<w_cloud.size()<<"-----------------------------------------------------------------------"<<std::endl;  
+    }
+    else if(!keyframe_updater->is_first&&keyframe_updater->update(odom))
+    {
+      pcl::VoxelGrid<PointT> voxelgrid;
+      voxelgrid.setLeafSize(0.1f, 0.1f, 0.1f);
+      pcl::PointCloud<PointT>::Ptr downsampled(new pcl::PointCloud<PointT>());
+      voxelgrid.setInputCloud(w_cloud.makeShared());
+      voxelgrid.filter(*downsampled);
+      cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvCopy(w_img, sensor_msgs::image_encodings::MONO8);
+      cv::Mat img = cv_ptr->image.clone();
+      std::cout<<"seq added to keyframs:"<<seq<<std::endl;
+      Ptr<cv::Feature2D> detector=cv::ORB::create();
+      std::vector<KeyPoint> keypoints;
+      cv::Mat descriptor;
+      detector->detectAndCompute(img, Mat(),keypoints,descriptor);
+      std::cout<<w_img.header.seq<<" "<<w_cloud.size()<<" "<<downsampled->size()<<"-----------------------------------------------------------------------"<<std::endl;
+      KeyFrame::Ptr keyframe(new KeyFrame(w_img.header.stamp,w_img.header.seq,w_odom, accum_d, downsampled,descriptor));
+      std::lock_guard<std::mutex> lock(keyframe_queue_mutex);
+      keyframe_queue.push_back(keyframe);  
+      w_odom=odom;
+      w_cloud.clear();
+      w_cloud=*cloud; 
+      w_img=*img_msg;
+      accum_d = keyframe_updater->get_accum_distance();     
+    }
+    else if(!keyframe_updater->is_first&&!keyframe_updater->update(odom))
+    {
+      std::lock_guard<std::mutex> lock(keyframe_queue_mutex);
+      pcl::PointCloud<PointT>::Ptr transformed(new pcl::PointCloud<PointT>());
+      pcl::transformPointCloud (*cloud, *transformed, (w_odom.inverse()*odom).matrix());  
+      w_cloud+=*transformed; 
+      //std::cout<<seq<<" "<<transformed->size()<<" "<<w_cloud.size()<<"-----------------------------------------------------------------------"<<std::endl;      
+    } 
+
   }
 
   /**
@@ -1107,6 +1152,10 @@ private:
   FILE *fp;
   Eigen::Isometry3d tf_velo2cam;
   std::map<int, Eigen::Isometry3d> odoms;
+  pcl::PointCloud<PointT> w_cloud;
+  Eigen::Isometry3d w_odom;
+  double accum_d;
+  sensor_msgs::Image w_img;
 };
 
 }
