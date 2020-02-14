@@ -17,15 +17,23 @@ rosbag play --clock   '/home/whu/data/data_source_KITTI/velostereobag/velo_img_0
 rosservice call /global_graph/dump "destination: '/home/whu/data/lv_slam_kitti/KITTI_lv_global/data/dump_04'  "
 
 ## 2. dlo_lfa_ggo_kitti
-### 2.1 
-roslaunch lv_slam dlo_lfa_ggo_kitti.launch  calib_file:='/home/whu/slam_ws/src/lv_slam/config/kitti_calib/calib00-02_13-21_corrected.txt'     odom_file:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo_calib/dlo_lfa_global/data/KITTI_00_odom.txt' seq:=00  lfa_output_path:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo_calib'
+### 2.1 dlo_lfa_kitti
+roslaunch lv_slam dlo_lfa_kitti.launch  calib_file:='/home/whu/slam_ws/src/lv_slam/config/kitti_calib/calib00-02_13-21.txt'     odom_file:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa/dlo_lfa_global/data/KITTI_00_odom.txt' seq:=00  lfa_output_path:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa'
 rosbag play --clock '/home/whu/data/data_source_KITTI/velostereobag/velo_img_00.bag'    -r 1.0
-rosservice call /global_graph/dump "destination: '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo_calib/dlo_lfa_global/data/dump_00'  "
+
+cpp ./evaluate_odometry '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa/aft_mapped_to_init_high_frec_file'
+(t,r)=(0.008990,0.000058)
+调参:seq01 使用lfa_3,其他使用lfa_1
+
+### 2.2 dlo_lfa_ggo_kitti
+roslaunch lv_slam dlo_lfa_ggo_kitti.launch  calib_file:='/home/whu/slam_ws/src/lv_slam/config/kitti_calib/calib00-02_13-21.txt'     odom_file:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/KITTI_00_odom.txt' seq:=00  lfa_output_path:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo'
+rosbag play --clock '/home/whu/data/data_source_KITTI/velostereobag/velo_img_00.bag'    -r 1.0
+rosservice call /global_graph/dump "destination: '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_00'  "
 
 rosservice call /global_graph/save_map "resolution: 0.05                                                                                 
-destination: '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo_calib/dlo_lfa_global/data/dump_00/map.pcd'"
+destination: '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_00/map.pcd'"
 
-evo_traj kitti '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo_calib/dlo_lfa_global/data/KITTI_00_odom.txt' '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo_calib/aft_mapped_to_init_high_frec_file/data/KITTI_00_odom.txt'   '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo_calib/dlo_lfa_global/data/dump_00/ggo_wf_odom.txt'      --plot_mode=xz  --ref='/home/whu/data/data_source_KITTI/gt/00.txt'   -p --save_plot  '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo_calib/dlo_lfa_global/data/dump_00/ggo_wf_odom.pdf'
+evo_traj kitti '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/KITTI_00_odom.txt' '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/aft_mapped_to_init_high_frec_file/data/KITTI_00_odom.txt'   '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_00/ggo_wf_odom.txt'      --plot_mode=xz  --ref='/home/whu/data/data_source_KITTI/gt/00.txt'   -p --save_plot  '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_00/ggo_wf_odom.pdf'
 
 ## 3. dlo_lfa_ggo_kylin
 ### 3.1
