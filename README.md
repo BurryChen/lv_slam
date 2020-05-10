@@ -4,44 +4,111 @@
 ## An slam with Lidar-visual fusion and graph optimization
 
 ## 1. node introduction
-### 1.1 ndt_omp & ndt_pca 底层匹配算法 及其改进
+### 1.1 ndt_omp & ndt_pca 
+Follow [ndt_omp Repositoty](https://github.com/koide3/ndt_omp,https://github.com/BurryChen/ndt_omp).
+### classical ndt, weighted ndt
 
 ### 1.2 lidar_odometry 
 
 ### 1.3 global_graph
 ### A global graph lidar slam using visual loop dectection
 
-# example 
-roslaunch lv_slam global_graph_kitti.launch res_dir:='/home/whu/data/lv_slam_kitti/KITTI_lv_global'       seq:=04
-rosbag play --clock   '/home/whu/data/data_source_KITTI/velostereobag/velo_img_04.bag'
-rosservice call /global_graph/dump "destination: '/home/whu/data/lv_slam_kitti/KITTI_lv_global/data/dump_04'  "
 
-## 2. dlo_lfa_ggo_kitti
-### 2.1 dlo_lfa_kitti
-roslaunch lv_slam dlo_lfa_kitti.launch  calib_file:='/home/whu/slam_ws/src/lv_slam/config/kitti_calib/calib00-02_13-21.txt'     odom_file:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa/dlo_lfa_global/data/KITTI_00_odom.txt' seq:=00  lfa_output_path:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa'
-rosbag play --clock '/home/whu/data/data_source_KITTI/velostereobag/velo_img_00.bag'    -r 1.0
+## 2 Requirements  https://mp.csdn.net/console/editor/html/80207367
+***lv_slam*** requires the following libraries:
+- OpenMP
+- PCL 1.7
+- g2o
+- suitesparse
+- Sophus
+- OpenCV 3.1
+- DBoW3
+- A-LOAM
 
-cpp ./evaluate_odometry '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa/aft_mapped_to_init_high_frec_file'
-(t,r)=(0.008990,0.000058)
-调参:seq01 使用lfa_3,其他使用lfa_1
+### 2.1.
+```
+    sudo apt-get install libsuitesparse-dev
+```
 
-### 2.2 dlo_lfa_ggo_kitti
-roslaunch lv_slam dlo_lfa_ggo_kitti.launch  calib_file:='/home/whu/slam_ws/src/lv_slam/config/kitti_calib/calib00-02_13-21.txt'     odom_file:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/KITTI_00_odom.txt' seq:=00  lfa_output_path:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo'
-rosbag play --clock '/home/whu/data/data_source_KITTI/velostereobag/velo_img_00.bag'    -r 1.0
-rosservice call /global_graph/dump "destination: '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_00'  "
+### 2.2. **Ceres Solver** installed to a default path
+```
+    git clone https://github.com/RainerKuemmerle/g2o.git
+    cd g2o
+    git checkout a48ff8c42136f18fbe215b02bfeca48fa0c67507
+    mkdir build && cd build
+    cmake .. -DCMAKE_BUILD_TYPE=RELEASE 
+    make -j8
+    sudo make install
+```
 
-rosservice call /global_graph/save_map "resolution: 0.05                                                                                 
-destination: '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_00/map.pcd'"
+### 2.3. **Sophus** installed to a gived path
+```
+    git clone https://github.com/strasdat/Sophus.git
+    cd Sophus
+    git checkout a621ff
+    mkdir build && cd build
+    camke -DCMAKE_BUILD_TYPE=Release -DCATKIN_DEVEL_PREFIX=../devel -DCMAKE_INSTALL_PREFIX=../install  ..
+    make -j8
+    sudo make install
+```
 
-evo_traj kitti '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/KITTI_00_odom.txt' '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/aft_mapped_to_init_high_frec_file/data/KITTI_00_odom.txt'   '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_00/ggo_wf_odom.txt'      --plot_mode=xz  --ref='/home/whu/data/data_source_KITTI/gt/00.txt'   -p --save_plot  '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_00/ggo_wf_odom.pdf'
+### 2.4. **PCL**
+Follow [PCL Installation](http://www.pointclouds.org/downloads/linux.html).
 
-## 3. dlo_lfa_ggo_kylin
-### 3.1
-roslaunch lv_slam dlo_lfa_ggo_kylin.launch calib_file:='/home/whu/slam_ws/src/lv_slam/config/kylin_calib/calib.txt'    odom_file:='/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/kylin_01_odom.txt'    seq:=k1  lfa_output_path:='/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo' 
-rosbag play --clock  '/home/whu/data/lv_slam_kylin/selected_for_dissertation/k2_vlp16_2_imu_mynt_2020-01-09-15-54-50.bag'    /ns1/horizontal_laser_3d:=/velodyne_points    -r 1.0
-rosservice call /global_graph/dump "destination: '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k3'   "
+### 2.5. **A-LOAM**
+Follow [A-LOAM Repositoty](https://github.com/BurryChen/A-LOAM).
 
-rosservice call /global_graph/save_map "resolution: 0.05                                                                                 
-destination: '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k3/map.pcd'" 
+### 2.6. **evo**
+Follow [evo Repositoty](https://github.com/MichaelGrupp/evo).
 
-evo_traj kitti '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/kylin_01_odom.txt' '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/aft_mapped_to_init_high_frec_file/data/KITTI_k1_odom.txt' '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k1/ggo_kf_odom.txt'    --plot_mode=xyz    -p --save_plot  '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k1/ggo_kf_odom.pdf'
+
+## 3. Build 
+Clone the repository and catkin_make:
+
+```
+    cd ~/slam_ws/src
+    git clone https://github.com/BurryChen/lv_slam.git
+    cd ../
+    mkdir build && cd build
+    camke -DCMAKE_BUILD_TYPE=Release -DCATKIN_DEVEL_PREFIX=../devel -DCMAKE_INSTALL_PREFIX=../install  ..
+    make -j8
+    sudo make install
+    source ~/slam_ws/devel/setup.bash
+```
+
+## 4. Example dlo_lfa_ggo_kitti
+### 4.1 dlo_lfa_kitti
+```
+    roslaunch lv_slam dlo_lfa_kitti.launch  calib_file:='/home/whu/slam_ws/src/lv_slam/config/kitti_calib/calib04-12.txt'     odom_file:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa/dlo_lfa_global/data/KITTI_04_odom.txt' seq:=04  lfa_output_path:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa'
+    rosbag play --clock '/home/whu/data/data_source_KITTI/velostereobag/velo_img_04.bag'    -r 1.0
+
+    #cpp ./evaluate_odometry_seq '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa/aft_mapped_to_init_high_frec_file' 04
+    #seq 04 (t_avg,r_avg)=(0.003118,0.000026)
+```
+   (t,r)=(0.008990,0.000058)
+   ALOAM config:seq01->lfa_3,others->lfa_1
+
+### 4.2 dlo_lfa_ggo_kitti
+```
+    roslaunch lv_slam dlo_lfa_ggo_kitti.launch  calib_file:='/home/whu/slam_ws/src/lv_slam/config/kitti_calib/calib04-12.txt'     odom_file:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/KITTI_04_odom.txt' seq:=04  lfa_output_path:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo'
+    rosbag play --clock '/home/whu/data/data_source_KITTI/velostereobag/velo_img_04.bag'    -r 1.0
+    rosservice call /global_graph/dump "destination: '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_04'  "
+
+    rosservice call /global_graph/save_map "resolution: 0.05                                                                                 
+    destination: '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_04/map.pcd'"
+
+    evo_traj kitti '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/KITTI_04_odom.txt' '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/aft_mapped_to_init_high_frec_file/data/KITTI_04_odom.txt'   '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_04/ggo_wf_odom.txt'      --plot_mode=xz  --ref='/home/whu/data/data_source_KITTI/gt/04.txt'   -p --save_plot  '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_04/ggo_wf_odom.pdf'
+```
+
+## 5. Example dlo_lfa_ggo_kylin
+### 5.1
+```
+    roslaunch lv_slam dlo_lfa_ggo_kylin.launch calib_file:='/home/whu/slam_ws/src/lv_slam/config/kylin_calib/calib.txt'    odom_file:='/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/kylin_02_odom.txt'    seq:=k2  lfa_output_path:='/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo' 
+    rosbag play --clock  '/home/whu/data/lv_slam_kylin/selected_for_dissertation/k2_vlp16_2_imu_mynt_2020-01-09-15-54-50.bag'    /ns1/horizontal_laser_3d:=/velodyne_points    -r 1.0
+    rosservice call /global_graph/dump "destination: '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k2'   "
+
+    rosservice call /global_graph/save_map "resolution: 0.05                                                                                 
+    destination: '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k2/map.pcd'" 
+
+    evo_traj kitti '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/kylin_02_odom.txt' '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/aft_mapped_to_init_high_frec_file/data/KITTI_k2_odom.txt' '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k2/ggo_kf_odom.txt'    --plot_mode=xyz    -p --save_plot  '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k2/ggo_kf_odom.pdf'
+```

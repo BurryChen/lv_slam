@@ -89,10 +89,7 @@ add_subdirectory(src/ndt_pca)
 #############################
 # nodelets
 add_subdirectory(src/lidar_odometry)
-
-
-add_subdirectory(src/work_flow)
-add_subdirectory(test)
-
-add_subdirectory(src/local_mapping)
+#############################
+## 3.global_graph(lib&exe) ##
+#############################
 add_subdirectory(src/global_graph)
