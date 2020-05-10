@@ -198,6 +198,7 @@ private:
       w_cloud.clear();
       w_cloud=*cloud; 
       w_img=*img_msg;
+      w_seq=seq;
       accum_d = keyframe_updater->get_accum_distance();  
       //std::cout<<seq<<" start "<<cloud->size()<<" "<<w_cloud.size()<<"-----------------------------------------------------------------------"<<std::endl;  
     }
@@ -210,19 +211,20 @@ private:
       voxelgrid.filter(*downsampled);
       cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvCopy(w_img, sensor_msgs::image_encodings::MONO8);
       cv::Mat img = cv_ptr->image.clone();
-      std::cout<<"seq added to keyframs:"<<seq<<std::endl;
+      std::cout<<"seq added to keyframs:"<<w_seq<<std::endl;
       Ptr<cv::Feature2D> detector=cv::ORB::create();
       std::vector<KeyPoint> keypoints;
       cv::Mat descriptor;
       detector->detectAndCompute(img, Mat(),keypoints,descriptor);
-      std::cout<<w_img.header.seq<<" "<<w_cloud.size()<<" "<<downsampled->size()<<"-----------------------------------------------------------------------"<<std::endl;
-      KeyFrame::Ptr keyframe(new KeyFrame(w_img.header.stamp,w_img.header.seq,w_odom, accum_d, downsampled,descriptor));
+      std::cout<<w_seq<<" "<<w_cloud.size()<<" "<<downsampled->size()<<"-----------------------------------------------------------------------"<<std::endl;
+      KeyFrame::Ptr keyframe(new KeyFrame(w_img.header.stamp,w_seq,w_odom, accum_d, downsampled,descriptor));
       std::lock_guard<std::mutex> lock(keyframe_queue_mutex);
       keyframe_queue.push_back(keyframe);  
       w_odom=odom;
       w_cloud.clear();
       w_cloud=*cloud; 
       w_img=*img_msg;
+      w_seq=seq;
       accum_d = keyframe_updater->get_accum_distance();     
     }
     else if(!keyframe_updater->is_first&&!keyframe_updater->update(odom))
@@ -1156,6 +1158,7 @@ private:
   Eigen::Isometry3d w_odom;
   double accum_d;
   sensor_msgs::Image w_img;
+  int w_seq;
 };
 
 }

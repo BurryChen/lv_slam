@@ -37,11 +37,11 @@ evo_traj kitti '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global
 
 ## 3. dlo_lfa_ggo_kylin
 ### 3.1
-roslaunch lv_slam dlo_lfa_ggo_kylin.launch calib_file:='/home/whu/slam_ws/src/lv_slam/config/kylin_calib/calib.txt'    odom_file:='/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_global/dlo_lfa_global/data/kylin_02_odom.txt'   seq:=k2  lfa_output_path:='/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_global'
+roslaunch lv_slam dlo_lfa_ggo_kylin.launch calib_file:='/home/whu/slam_ws/src/lv_slam/config/kylin_calib/calib.txt'    odom_file:='/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/kylin_01_odom.txt'    seq:=k1  lfa_output_path:='/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo' 
 rosbag play --clock  '/home/whu/data/lv_slam_kylin/selected_for_dissertation/k2_vlp16_2_imu_mynt_2020-01-09-15-54-50.bag'    /ns1/horizontal_laser_3d:=/velodyne_points    -r 1.0
-rosservice call /global_graph/dump "destination: '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_global/dlo_lfa_global/data/dump_k3'   "
+rosservice call /global_graph/dump "destination: '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k3'   "
 
 rosservice call /global_graph/save_map "resolution: 0.05                                                                                 
-destination: '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_global/dlo_lfa_global/data/dump_k3/map.pcd'" 
+destination: '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k3/map.pcd'" 
 
-evo_traj kitti '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_global/dlo_lfa_global/data/kylin_01_odom.txt' '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_global/aft_mapped_to_init_high_frec_file/data/KITTI_k1_odom.txt' '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_global/dlo_lfa_global/data/dump_k1/ggo_kf_odom.txt'    --plot_mode=xyz    -p --save_plot  '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_global/dlo_lfa_global/data/dump_k1/ggo_kf_odom.pdf'
+evo_traj kitti '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/kylin_01_odom.txt' '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/aft_mapped_to_init_high_frec_file/data/KITTI_k1_odom.txt' '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k1/ggo_kf_odom.txt'    --plot_mode=xyz    -p --save_plot  '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k1/ggo_kf_odom.pdf'

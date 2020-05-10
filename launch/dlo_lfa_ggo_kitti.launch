@@ -141,7 +141,7 @@
     <param name="max_stddev_q" value="0.2" />
     <!-- update params -->
     <param name="graph_update_interval" value="10.0" />          <!--SLAM 后端graph优化的时间间隔 wall time -->
-    <param name="max_keyframes_per_update" value="10" />        <!--每次从keyframe_queue 加入到loop的数目n,n个形成一个环约束-->
+    <param name="max_keyframes_per_update" value="20" />        <!--每次从keyframe_queue 加入到loop的数目n,-->
     <param name="map_cloud_update_interval" value="10.0" />     <!--mapping更新的时间间隔-->
     <param name="map_cloud_resolution" value="0.5" />          <!--全局地图的分辨率的分辨率-->
   </node>

@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- update after merging devel -->
+  <!-- arguments -->
+  <param name="use_sim_time" value="true" />
+  <arg name="rviz" default="true" />
+  <arg name="nodelet_manager" default="velodyne_nodelet_manager" />
+  <arg name="enable_floor_detection" default="false" />
+  <arg name="enable_gps" default="false" />
+  <arg name="enable_imu_acc" default="false" />
+  <arg name="enable_imu_ori" default="false" />
+  <!--<arg name="odom_file" value="/home/whu/data/graph_fusion/KITTI_0X_odom.txt" /-->
+
+  <!-- transformation between lidar and base_link 
+  //velodyne2base of KITTI
+  <node pkg="tf" type="static_transform_publisher" name="lidar2base_publisher" 
+	args="-1.198459927713e-02 -5.403984729748e-02 -2.921968648686e-01 0.499888 -0.503701 0.496055 0.500325 base_link velodyne 10" />
+  -->
+  <node pkg="tf" type="static_transform_publisher" name="lidar2base_publisher" args="0 0 0 0 0 0 base_link velodyne 10" />
+  <node pkg="tf" type="static_transform_publisher" name="camera_init2odom_publisher" args="0 0 0 0 0 0 odom camera_init 10" />
+
+  <!-- in case you use velodyne_driver, comment out the following line -->
+  <node pkg="nodelet" type="nodelet" name="$(arg nodelet_manager)" args="manager" output="screen"/>
+  
+  <!-- prefiltering_nodelet -->
+  <node pkg="nodelet" type="nodelet" name="prefiltering_nodelet" args="load lidar_odometry/PrefilteringNodelet $(arg nodelet_manager)">
+  	<!-- in case base_link_frame is blank, mapping will be performed in the lidar frame -->
+    <param name="base_link_frame" value="base_link" />
+    <!-- distance filter --> <!--距离滤波-->
+    <param name="use_distance_filter" value="true" />
+    <param name="distance_near_thresh" value="0.5" />
+    <param name="distance_far_thresh" value="100.0" />
+    <!-- NONE, VOXELGRID, or APPROX_VOXELGRID -->
+    <!--采取不同下采样的方法,VOXELGRID重心，APPROX_VOXELGRID几何中心 -->
+    <param name="downsample_method" value="VOXELGRID" /> 
+    <param name="downsample_resolution" value="0.1" />
+    <!-- NONE, RADIUS, or STATISTICAL --> <!--外点过滤-->
+    <param name="outlier_removal_method" value="RADIUS" />
+    <param name="statistical_mean_k" value="30" />   <!--统计的方式过滤外点，周围的neighbor数目最小30-->
+    <param name="statistical_stddev" value="1.2" />  <!--统计的方式过滤外点，设置判断是否为离群点的阈值-->
+    <param name="radius_radius" value="0.5" />       <!--以半径为0.5米的方式进行统计-->
+    <param name="radius_min_neighbors" value="5" />  <!--统计的邻居的最小数目为5-->
+    <param name="use_angle_calibration" value="false" />
+  </node>
+
+  <!-- scan_matching_odom_nodelet -->
+  <node pkg="nodelet" type="nodelet" name="scan_matching_odom_nodelet" args="load lidar_odometry/ScanMatchingOdomNodelet $(arg nodelet_manager)">
+      <param name="odom_frame_id" value="odom" /> 
+      <param name="calib_file" type="string" value="$(arg calib_file)" /> 
+      <param name="odom_file" type="string" value="$(arg odom_file)" /> 
+      <param name="keyframe_delta_trans" value="10.0" />       <!--m-->
+      <param name="keyframe_delta_angle" value="0.17" />      <!--0.17=rad 10°-->
+      <param name="keyframe_delta_time" value="1.0" />        <!--s,当前帧选取作为关键帧的条件-->
+  </node>
+  
+</launch>
