@@ -13,8 +13,13 @@ Follow [ndt_omp Repositoty](https://github.com/koide3/ndt_omp,https://github.com
 ### 1.3 global_graph
 ### A global graph lidar slam using visual loop dectection
 
+### 1.4 test
+### test/pose_estimation_2d3d_l2v_ceres
+### test/pose_estimation_ceres
+### test/dlg_segmentation,
 
-## 2 Requirements  https://mp.csdn.net/console/editor/html/80207367
+
+## 2 Requirements
 ***lv_slam*** requires the following libraries:
 - OpenMP
 - PCL 1.7
@@ -111,4 +116,21 @@ Clone the repository and catkin_make:
     destination: '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k2/map.pcd'" 
 
     evo_traj kitti '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/kylin_02_odom.txt' '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/aft_mapped_to_init_high_frec_file/data/KITTI_k2_odom.txt' '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k2/ggo_kf_odom.txt'    --plot_mode=xyz    -p --save_plot  '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k2/ggo_kf_odom.pdf'
+```
+
+## 5 Example test
+### 6.1  pose_estimation_2d3d_l2v_ceres
+```
+    '/home/whu/slam_ws/devel/lib/lv_slam/pose_estimation_2d3d_l2v_ceres' 'DataPath/02calib_2d3d_l2v'
+```
+
+### 6.2  pose_estimation_ceres
+```
+    '/home/whu/slam_ws/devel/lib/lv_slam/pose_estimation_ceres' 'DataPath/03calib_LRF/cp_all' 'DataPath/03calib_LRF/cp_all/cp_all.csv'
+    '/home/whu/slam_ws/devel/lib/lv_slam/pose_estimation_ceres' 'DataPath/03calib_LRF/cp_r_R' 'DataPath/03calib_LRF/cp_r_R/cp_r_R.csv'
+```
+
+### 6.3  dlg_segmentation
+```
+    '/home/whu/slam_ws/devel/lib/lv_slam/dlg_segmentation' 'DataPath/04dlg_2D_UTM30LX/_2018-01-06-18-22-17.bag_points.ply'
 ```

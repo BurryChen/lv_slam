@@ -93,3 +93,8 @@ add_subdirectory(src/lidar_odometry)
 ## 3.global_graph(lib&exe) ##
 #############################
 add_subdirectory(src/global_graph)
+
+#############################
+## 3.test(lib&exe) ##
+#############################
+add_subdirectory(test)
