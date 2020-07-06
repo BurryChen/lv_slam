@@ -10,11 +10,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
 # pcl 1.7 causes a segfault when it is built with debug mode
 set(CMAKE_BUILD_TYPE "Release")
 
-find_package(Sophus REQUIRED PATHS "/home/whu/tools/Sophus/build")
+find_package(Sophus REQUIRED PATHS "/home/chenshoubin/tools/Sophus/build")
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   pcl_ros
-  #geodesy
+  geodesy
   nmea_msgs
   sensor_msgs
   message_generation
@@ -23,7 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
 )
 
-find_package(PCL 1.7 REQUIRED)
+find_package(PCL REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})

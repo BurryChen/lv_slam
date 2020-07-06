@@ -8,7 +8,7 @@ find_package(Sophus REQUIRED)
 include_directories( ${Sophus_INCLUDE_DIRS} )
 
 # 寻找Ceres库并添加它的头文件
-find_package( Ceres REQUIRED)
+find_package( Ceres REQUIRED PATHS /home/chenshoubin/tools/ceres-solver-1.14.0/install) 
 include_directories( ${CERES_INCLUDE_DIRS} )
 link_directories(${CERES_LIBRARY_DIRS})
 add_definitions(${CERES_DEFINITIONS})
@@ -22,7 +22,7 @@ find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_DIRS} )
 
 #PCL
-find_package(PCL 1.7 REQUIRED)
+find_package(PCL REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})

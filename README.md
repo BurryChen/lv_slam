@@ -134,3 +134,11 @@ Clone the repository and catkin_make:
 ```
     '/home/whu/slam_ws/devel/lib/lv_slam/dlg_segmentation' 'DataPath/04dlg_2D_UTM30LX/_2018-01-06-18-22-17.bag_points.ply'
 ```
+
+## 7. Example dlo_lfa_ggo_ob
+### 7.1 dlo_lfa_ob
+```
+    roslaunch lv_slam dlo_lfa_ob.launch calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/kylin_calib/calib.txt'    odom_file:='/home/chenshoubin/data/ob_lv_dlo_lfa/dlo_lfa_global/data/ob_01_odom.txt'    seq:=o1  lfa_output_path:='/home/chenshoubin/data/ob_lv_dlo_lfa'
+    
+    rosbag play --clock  /home/chenshoubin/data/ob_2020-07-03-17-28-30.bag    /rslidar_points:=/velodyne_points    -r 1.0
+```

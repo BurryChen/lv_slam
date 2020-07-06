@@ -12,7 +12,7 @@ include_directories( ${OpenCV_INCLUDE_DIRS} )
 # dbow3 is a simple lib so I assume you installed it in default directory 
 #set( DBoW3_INCLUDE_DIRS "/usr/local/include" )
 #set( DBoW3_LIBS "/usr/local/lib/libDBoW3.a" )
-find_package( DBoW3 REQUIRED PATHS "/home/whu/tools/DBow3/build")
+find_package( DBoW3 REQUIRED PATHS "/home/chenshoubin/tools/DBow3/build")
 include_directories( ${DBoW3_INCLUDE_DIRS} )
 
 add_library(global_graph_nodelet 
