@@ -142,3 +142,23 @@ Clone the repository and catkin_make:
     
     rosbag play --clock  /home/chenshoubin/data/ob_2020-07-03-17-28-30.bag    /rslidar_points:=/velodyne_points    -r 1.0
 ```
+### 7.2 dlo_lfa_ggo_ob
+```
+    roslaunch lv_slam dlo_lfa_ggo_ob.launch calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/kylin_calib/calib.txt'    odom_file:='/home/chenshoubin/data/ob_lv_dlo_lfa/dlo_lfa_global/data/ob_02_odom.txt'    seq:=o2  lfa_output_path:='/home/chenshoubin/data/ob_lv_dlo_lfa'
+    
+    rosbag play --clock  /home/chenshoubin/data/ob_02_rs_kinect_4_2020-08-18-16-45-02.bag    /rslidar_points:=/velodyne_points    -r 1.0
+    
+    rosservice call /global_graph/dump "destination: '/home/chenshoubin/data/ob_lv_dlo_lfa/dlo_lfa_global/data/dump_o2' " 
+    
+    rosservice call /global_graph/save_map '{resolution: 0.05, destination: '/home/chenshoubin/data/ob_lv_dlo_lfa/dlo_lfa_global/data/dump_o2/map.pcd'}'
+```
+
+```
+    roslaunch lv_slam dlo_lfa_ggo_ob.launch calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/kylin_calib/calib.txt'    odom_file:='/home/chenshoubin/data/ob_lv_dlo_lfa_ggo/dlo_lfa_global/data/ob_03_odom.txt'    seq:=o3  lfa_output_path:='/home/chenshoubin/data/ob_lv_dlo_lfa_ggo' img_topic:=/ns0/rgb/image_rect_color
+    
+    rosbag play --clock  '/media/chenshoubin/Research/data/ob_03_rs_kinect4_rect_rgbd_2020-10-27-15-36-09.bag'     /rslidar_points:=/velodyne_points    -r 1.0
+
+    rosservice call /global_graph/dump "destination: '/home/chenshoubin/data/ob_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_o3' " 
+    
+    rosservice call /global_graph/save_map '{resolution: 0.05, destination: '/home/chenshoubin/data/ob_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_o3/map.pcd'}'
+```
