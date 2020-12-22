@@ -43,6 +43,8 @@
 
 #include <pcl/registration/icp.h>
 #include <pcl/registration/bfgs.h>
+#include <boost/function.hpp> 
+#include <boost/bind.hpp> 
 
 namespace pclomp
 {

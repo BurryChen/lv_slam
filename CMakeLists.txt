@@ -2,15 +2,15 @@ cmake_minimum_required(VERSION 2.8.3)
 project(lv_slam)
 
 # -mavx causes a lot of errors!!
-add_definitions(-std=c++11 -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2)
-set(CMAKE_CXX_FLAGS "-std=c++11 -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2")
+#add_definitions(-std=c++11 -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2)
+set(CMAKE_CXX_FLAGS "-std=c++14 -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2")
 #set(CMAKE_CXX_FLAGS "-std=c++11 -O0")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 # pcl 1.7 causes a segfault when it is built with debug mode
 set(CMAKE_BUILD_TYPE "Release")
 
-find_package(Sophus REQUIRED PATHS "/home/chenshoubin/tools/Sophus/build")
+find_package(Sophus REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   pcl_ros
@@ -36,6 +36,7 @@ find_package(G2O REQUIRED)
 include_directories(SYSTEM ${G2O_INCLUDE_DIR} ${G2O_INCLUDE_DIRS})
 link_directories(${G2O_LIBRARY_DIRS})
 # link_libraries(${G2O_LIBRARIES})
+message(STATUS "G2O_FOUND:" ${G2O_FOUND})
 
 find_package(OpenMP)
 if (OPENMP_FOUND)
