@@ -9,7 +9,7 @@ ProjectRootRelative=
 
 [CMake][CMake Build Directory 0]
 Build Directory Path=/home/chenshoubin/slam_ws/build/lv_slam
-Build Type=Release
+Build Type=Debug
 CMake Binary=/usr/bin/cmake
 CMake Executable=/usr/bin/cmake
 Environment Profile=

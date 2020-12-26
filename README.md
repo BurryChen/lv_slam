@@ -22,46 +22,81 @@ Follow [ndt_omp Repositoty](https://github.com/koide3/ndt_omp,https://github.com
 ## 2 Requirements
 ***lv_slam*** requires the following libraries:
 - OpenMP
-- PCL 1.7
+- PCL
 - g2o
 - suitesparse
 - Sophus
-- OpenCV 3.1
+- OpenCV 
 - DBoW3
 - A-LOAM
 
-### 2.1.
+### 2.0. base
 ```
-    sudo apt-get install libsuitesparse-dev
+    sudo apt-get install -y --no-install-recommends \
+         libsuitesparse-dev \
+         ros-noetic-geodesy ros-noetic-pcl-ros ros-noetic-nmea-msgs ros-noetic-libg2o
 ```
 
-### 2.2. **Ceres Solver** installed to a default path
+### 2.1. **Ceres Solver** installed to /usr/local/libname
 ```
-    git clone https://github.com/RainerKuemmerle/g2o.git
-    cd g2o
-    git checkout a48ff8c42136f18fbe215b02bfeca48fa0c67507
-    mkdir build && cd build
-    cmake .. -DCMAKE_BUILD_TYPE=RELEASE 
-    make -j8
+    sudo apt-get install -y --no-install-recommends \
+         cmake libgoogle-glog-dev libatlas-base-dev libeigen3-dev libsuitesparse-dev 
+```
+```  
+    #下载 ceres-solver-1.14.0.tar.gz并解压
+    # http://www.ceres-solver.org/installation.html#linux
+    cd ceres-solver-1.14.0
+    mkdir -p build && cd build
+    cmake -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=/usr/local/ceres-solver ..
+    make -j12
     sudo make install
+   // cd ..&& sudo rm -r ./build
 ```
 
-### 2.3. **Sophus** installed to a gived path
+### 2.2. **g2o** installed to default path
+```
+    sudo apt-get install ros-noetic-libg2o
+```
+
+### 2.3. **Sophus** installed to /usr/local/libname
 ```
     git clone https://github.com/strasdat/Sophus.git
     cd Sophus
     git checkout a621ff
-    mkdir build && cd build
-    camke -DCMAKE_BUILD_TYPE=Release -DCATKIN_DEVEL_PREFIX=../devel -DCMAKE_INSTALL_PREFIX=../install  ..
-    make -j8
+    mkdir -p build && cd build
+    cmake -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=/usr/local/Sophus ..
+    make -j12
     sudo make install
+    //cd ..&& sudo rm -r ./build
 ```
 
-### 2.4. **PCL**
-Follow [PCL Installation](http://www.pointclouds.org/downloads/linux.html).
+### 2.4. **DBow3** installed to /usr/local/libname
+**OpenCV**
+```
+   sudo apt install libopencv-dev python3-opencv
+```
+
+**DBow3**
+```
+    git clone https://github.com/rmsalinas/DBow3
+    cd DBow3
+    mkdir -p build && cd build
+    cmake -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=/usr/local/DBow3 ..
+    make -j12
+    sudo make install
+    // cd ..&& sudo rm -r ./build
+```
 
 ### 2.5. **A-LOAM**
 Follow [A-LOAM Repositoty](https://github.com/BurryChen/A-LOAM).
+
+```
+cd workspace
+cd src
+git clone https://github.com/BurryChen/A-LOAM.git
+cd ..
+catkin_make -DCATKIN_WHITELIST_PACKAGES="aloam_velodyne" --build='./build/A-LOAM' -DCATKIN_DEVEL_PREFIX=./devel -DCMAKE_INSTALL_PREFIX=./install  install
+```
 
 ### 2.6. **evo**
 Follow [evo Repositoty](https://github.com/MichaelGrupp/evo).
@@ -74,15 +109,18 @@ Clone the repository and catkin_make:
     cd ~/slam_ws/src
     git clone https://github.com/BurryChen/lv_slam.git
     cd ../
-    mkdir build && cd build
-    camke -DCMAKE_BUILD_TYPE=Release -DCATKIN_DEVEL_PREFIX=../devel -DCMAKE_INSTALL_PREFIX=../install  ..
-    make -j8
-    sudo make install
+catkin_make -DCATKIN_WHITELIST_PACKAGES="lv_slam" --build='./build/lv_slam' -DCATKIN_DEVEL_PREFIX=./devel -DCMAKE_INSTALL_PREFIX=./install  install
     source ~/slam_ws/devel/setup.bash
 ```
 
 ## 4. Example dlo_lfa_ggo_kitti
 ### 4.1 dlo_lfa_kitti
+```
+# realtive path
+roslaunch lv_slam dlo_lfa_kitti.launch  calib_file:='./src/lv_slam/config/kitti_calib/calib04-12.txt'     odom_file:='../data/kitti_lv_dlo_lfa/dlo_lfa_global/data/KITTI_04_odom.txt' seq:=04  lfa_output_path:='../data/kitti_lv_dlo_lfa'
+rosbag play --clock '../data/velo_img_04.bag'    -r 1.0
+```
+
 ```
     roslaunch lv_slam dlo_lfa_kitti.launch  calib_file:='/home/whu/slam_ws/src/lv_slam/config/kitti_calib/calib04-12.txt'     odom_file:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa/dlo_lfa_global/data/KITTI_04_odom.txt' seq:=04  lfa_output_path:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa'
     rosbag play --clock '/home/whu/data/data_source_KITTI/velostereobag/velo_img_04.bag'    -r 1.0
@@ -95,12 +133,16 @@ Clone the repository and catkin_make:
 
 ### 4.2 dlo_lfa_ggo_kitti
 ```
+# realtive path
+roslaunch lv_slam dlo_lfa_ggo_kitti.launch  calib_file:='./src/lv_slam/config/kitti_calib/calib04-12.txt'     odom_file:='../data/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/KITTI_04_odom.txt' seq:=04  lfa_output_path:='../data/kitti_lv_dlo_lfa_ggo'
+```
+
+```
     roslaunch lv_slam dlo_lfa_ggo_kitti.launch  calib_file:='/home/whu/slam_ws/src/lv_slam/config/kitti_calib/calib04-12.txt'     odom_file:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/KITTI_04_odom.txt' seq:=04  lfa_output_path:='/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo'
     rosbag play --clock '/home/whu/data/data_source_KITTI/velostereobag/velo_img_04.bag'    -r 1.0
-    rosservice call /global_graph/dump "destination: '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_04'  "
-
-    rosservice call /global_graph/save_map "resolution: 0.05                                                                                 
-    destination: '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_04/map.pcd'"
+    
+    rosservice call /global_graph/dump "destination: '/home/chenshoubin/data/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_06'  "
+    rosservice call /global_graph/save_map "{resolution: 0.05, destination: '/home/chenshoubin/data/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_06/map.pcd'}"
 
     evo_traj kitti '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/KITTI_04_odom.txt' '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/aft_mapped_to_init_high_frec_file/data/KITTI_04_odom.txt'   '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_04/ggo_wf_odom.txt'      --plot_mode=xz  --ref='/home/whu/data/data_source_KITTI/gt/04.txt'   -p --save_plot  '/home/whu/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_04/ggo_wf_odom.pdf'
 ```
@@ -118,7 +160,7 @@ Clone the repository and catkin_make:
     evo_traj kitti '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/kylin_02_odom.txt' '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/aft_mapped_to_init_high_frec_file/data/KITTI_k2_odom.txt' '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k2/ggo_kf_odom.txt'    --plot_mode=xyz    -p --save_plot  '/home/whu/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k2/ggo_kf_odom.pdf'
 ```
 
-## 5 Example test
+## 6 Example test
 ### 6.1  pose_estimation_2d3d_l2v_ceres
 ```
     '/home/whu/slam_ws/devel/lib/lv_slam/pose_estimation_2d3d_l2v_ceres' 'DataPath/02calib_2d3d_l2v'

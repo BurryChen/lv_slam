@@ -5,14 +5,16 @@ cmake_minimum_required(VERSION 2.8.3)
 #############################
 # nodelets
 # opencv 
-find_package( OpenCV 3.1 REQUIRED )
+find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
+message(STATUS "OpenCV_FOUND:" ${OpenCV_FOUND})
+message(STATUS "OpenCV_INCLUDE_DIRS:" ${OpenCV_INCLUDE_DIRS})
 
 # dbow3 
 # dbow3 is a simple lib so I assume you installed it in default directory 
 #set( DBoW3_INCLUDE_DIRS "/usr/local/include" )
 #set( DBoW3_LIBS "/usr/local/lib/libDBoW3.a" )
-find_package( DBoW3 REQUIRED PATHS "/home/chenshoubin/tools/DBow3/build")
+find_package( DBoW3 REQUIRED)
 include_directories( ${DBoW3_INCLUDE_DIRS} )
 
 add_library(global_graph_nodelet 

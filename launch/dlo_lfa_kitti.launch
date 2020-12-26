@@ -64,11 +64,11 @@
     <node pkg="aloam_velodyne" type="ascanRegistration" name="ascanRegistration" output="screen" />
     <node pkg="aloam_velodyne" type="alaserOdometry" name="alaserOdometry" output="screen" />
     <node pkg="aloam_velodyne" type="alaserMapping" name="alaserMapping" output="screen" />
-    <!-- 
+    <!-- -->
     <group if="$(arg rviz)">
         <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz2" args="-d $(find aloam_velodyne)/rviz_cfg/aloam_velodyne.rviz" />
     </group>
-    -->
+    
 
     <node name="kittiHelper" pkg="aloam_velodyne" type="kittiHelper" output="screen"> 
         <param name="dataset_folder" type="string" value="/media/whu/HD_CHEN_2T/02data/KITTI_odometry/dataset/" />
