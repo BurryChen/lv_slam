@@ -116,8 +116,11 @@ Clone the repository and catkin_make:
 catkin_make -DCATKIN_WHITELIST_PACKAGES="lv_slam" --build='./build/lv_slam' -DCATKIN_DEVEL_PREFIX=./devel -DCMAKE_INSTALL_PREFIX=./install  install
     source ~/slam_ws/devel/setup.bash
 ```
+Download [lv_slam_data](https://drive.google.com/drive/folders/1YTTXD4QmFrA6LQrfslRlUzATxYG0u32R?usp=sharing) to YOUR_DATASET_FOLDER.
 
 ## 4. Example dlo_lfa_ggo_kitti
+
+Download [velo_img_04](https://drive.google.com/file/d/1PD9RHqhYCuFaXSo95ARs3ALMUDD9y5mn/view?usp=sharing) to YOUR_DATASET_FOLDER.
 ### 4.1 dlo_lfa_kitti
 ```
 # realtive path
