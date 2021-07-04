@@ -124,8 +124,8 @@ Download [velo_img_04](https://drive.google.com/file/d/1PD9RHqhYCuFaXSo95ARs3ALM
 ### 4.1 dlo_lfa_kitti
 ```
 # realtive path
-roslaunch lv_slam dlo_lfa_kitti.launch  calib_file:='./src/lv_slam/config/kitti_calib/calib04-12.txt'     odom_file:='../data/kitti_lv_dlo_lfa/dlo_lfa_global/data/KITTI_04_odom.txt' seq:=04  lfa_output_path:='../data/kitti_lv_dlo_lfa'
-rosbag play --clock '../data/velo_img_04.bag'    -r 1.0
+roslaunch lv_slam dlo_lfa_kitti.launch  calib_file:='$(find lv_slam)/config/kitti_calib/calib04-12.txt'     odom_file:='$(find lv_slam)/data/kitti_lv_dlo_lfa/dlo_lfa_global/data/KITTI_04_odom.txt' seq:=04  lfa_output_path:='$(find lv_slam)/data/kitti_lv_dlo_lfa'
+rosbag play --clock './src/lv_slam/data/velo_img_04.bag'    -r 1.0
 ```
 
 ```
@@ -141,7 +141,8 @@ rosbag play --clock '../data/velo_img_04.bag'    -r 1.0
 ### 4.2 dlo_lfa_ggo_kitti
 ```
 # realtive path
-roslaunch lv_slam dlo_lfa_ggo_kitti.launch  calib_file:='./src/lv_slam/config/kitti_calib/calib04-12.txt'     odom_file:='../data/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/KITTI_04_odom.txt' seq:=04  lfa_output_path:='../data/kitti_lv_dlo_lfa_ggo'
+roslaunch lv_slam dlo_lfa_ggo_kitti.launch  calib_file:='$(find lv_slam)/config/kitti_calib/calib04-12.txt'     odom_file:='$(find lv_slam)/data/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/KITTI_04_odom.txt' seq:=04  lfa_output_path:='$(find lv_slam)/data/kitti_lv_dlo_lfa_ggo'
+rosbag play --clock './src/lv_slam/data/velo_img_04.bag'    -r 1.0
 ```
 
 ```

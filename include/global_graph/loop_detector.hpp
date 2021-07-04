@@ -56,7 +56,7 @@ public:
     last_edge_accum_distance = 0.0;
     
     //loop dectection param
-    voc_path=pnh.param<std::string>("voc_path", "/home/whu/slam_ws/src/lv_slam/config/vocab_larger.yml.gz");
+    voc_path=pnh.param<std::string>("voc_path", "$(find lv_slam)/config/vocab_larger.yml.gz");
     voc = new DBoW3::Vocabulary(voc_path);
     if(voc->empty())
     {
