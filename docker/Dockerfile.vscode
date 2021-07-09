@@ -1,0 +1,17 @@
+#FROM ros:melodic
+FROM ubuntu:18.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+COPY installers /tmp/installers
+COPY  3rdtools home/chenshoubin/tools
+RUN bash /tmp/installers/install_minimal_environment.sh
+RUN bash /tmp/installers/install_ros.sh
+#RUN bash /tmp/installers/install_lv_slam_vscode.sh
+
+#RUN sed -i "6i source \"/home/chenshoubin/slam_ws/devel/setup.bash\"" /ros_entrypoint.sh
+
+#WORKDIR /
+
+#ENTRYPOINT ["/ros_entrypoint.sh"]
+CMD ["bash"]
