@@ -1,6 +1,12 @@
 #ifndef LOOP_DETECTOR_HPP
 #define LOOP_DETECTOR_HPP
 
+#include <iostream>
+#include <sys/types.h>
+#include <string>
+#include <vector>
+#include <fstream>
+
 #include <boost/format.hpp>
 #include <global_graph/keyframe.hpp>
 #include <global_graph/registrations.hpp>
@@ -68,6 +74,30 @@ namespace lv_slam
         std::cout << "Vocabulary dose not exit." << std::endl;
         return;
       }
+
+      //semantic label file read
+      label_path = pnh.param<std::string>("label_path", "$(find lv_slam)/data/05_label.txt");
+      std::cout << "label_path=" << label_path << std::endl;
+      std::ifstream inFile;
+      inFile.open(label_path, ios::in);
+      if (!inFile.is_open())
+      {
+        cout << "label_path open failed" << endl;
+      }
+      std::string line;
+      while (getline(inFile, line))
+      {
+        //cout <<"原始字符串："<< line << endl; //整行输出
+        istringstream sin(line); //将整行字符串line读入到字符串流istringstream中
+        vector<string> fields;   //声明一个字符串向量
+        string field;
+        while (getline(sin, field, ',')) //将字符串流sin中的字符读入到field字符串中，以逗号为分隔符
+        {
+          fields.push_back(field); //将刚刚读取的字符串添加到向量fields中
+        }
+        //std::pair<double, int> pair_label(stof(fields[0].c_str()), atoi(fields[1].c_str()));
+        label_frames.push_back(make_pair<double, int>(stof(fields[0].c_str()), atoi(fields[1].c_str())));
+      }
     }
 
     /**
@@ -82,7 +112,8 @@ namespace lv_slam
       for (const auto &new_keyframe : new_keyframes)
       {
         auto candidates = find_candidates(keyframes, new_keyframe);
-        auto loop = matching_and_bow(candidates, new_keyframe, graph_slam);
+        //auto loop = matching_and_bow(candidates, new_keyframe, graph_slam);
+        auto loop = matching_with_label(candidates, new_keyframe, graph_slam);
         if (loop)
         {
           detected_loops.push_back(loop);
@@ -280,6 +311,104 @@ namespace lv_slam
       return std::make_shared<Loop>(new_keyframe, best_matched, relative_pose);
     }
 
+    /**
+   * @brief To validate a loop candidate this function applies senmantic loop detection and a scan matching between keyframes. If true, the loop is added to the pose graph
+   * @param candidate_keyframes  candidate keyframes of loop start
+   * @param new_keyframe         loop end keyframe
+   * @param graph_slam           graph slam
+   */
+    Loop::Ptr matching_with_label(std::vector<KeyFrame::Ptr> candidate_keyframes, const KeyFrame::Ptr &new_keyframe, lv_slam::GraphSLAM &graph_slam)
+    {
+      if (candidate_keyframes.empty())
+      {
+        std::cout << "no candidate, then loop not found..." << std::endl;
+        return nullptr;
+      }
+
+      registration->setInputTarget(new_keyframe->cloud);
+
+      double best_score = std::numeric_limits<double>::max();
+      KeyFrame::Ptr best_matched;
+      Eigen::Matrix4f relative_pose;
+
+      std::cout << std::endl;
+      std::cout << "--- loop detection ---" << std::endl;
+      std::cout << "num_candidates: " << candidate_keyframes.size() << std::endl;
+      auto t1 = ros::Time::now();
+
+      //set senmantic label value for new_keyframe
+      int new_keyframe_label;
+      for (auto label_frame : label_frames)
+      {
+        if (std::abs(new_keyframe->stamp.toSec() - label_frame.first) < 1.0)
+        {
+          new_keyframe_label = label_frame.second;
+          break;
+        }
+      }
+
+      //set senmantic label value for candidate_keyframes
+      for (std::vector<KeyFrame::Ptr>::iterator it = candidate_keyframes.begin(); it != candidate_keyframes.end();)
+      {
+        int candidate_label=0;
+        for (auto label_frame : label_frames)
+        {
+          if (std::abs((*it)->stamp.toSec() - label_frame.first) < 1.0)
+          {
+            candidate_label = label_frame.second;
+            break;
+          }
+        }
+        if (candidate_label != new_keyframe_label)
+        {
+          it = candidate_keyframes.erase(it);
+        }
+        else
+        {
+          ++it;
+        }
+      }
+
+      std::cout << candidate_keyframes.size() << "loop dectection for " << new_keyframe->seq << std::endl;
+      pcl::PointCloud<PointT>::Ptr aligned(new pcl::PointCloud<PointT>());
+      for (int i = 0; i < candidate_keyframes.size(); i++)
+      {
+        std::cout << i << std::endl;
+        best_matched = candidate_keyframes[i];
+        registration->setInputSource(best_matched->cloud);
+        Eigen::Matrix4f guess = (new_keyframe->node->estimate().inverse() * best_matched->node->estimate()).matrix().cast<float>();
+        guess(2, 3) = 0.0;
+        registration->align(*aligned, guess);
+        std::cout << "." << std::flush;
+
+        double score = registration->getFitnessScore(fitness_score_max_range);
+        if (!registration->hasConverged() || score > best_score)
+        {
+          continue;
+        }
+
+        best_score = score; //取最低匹配误差（得分）
+        relative_pose = registration->getFinalTransformation();
+      }
+
+      if (best_score > fitness_score_thresh)
+      {
+        std::cout << "loop not found..." << std::endl;
+        return nullptr;
+      }
+
+      auto t2 = ros::Time::now();
+      std::cout << " done" << std::endl;
+      std::cout << "best_score: " << boost::format("%.3f") % best_score << "    time: " << boost::format("%.3f") % (t2 - t1).toSec() << "[sec]" << std::endl;
+
+      std::cout << "loop found!!" << std::endl; //block 表示返回从矩阵的(i, j)开始，每行取p个元素，每列取q个元素
+      std::cout << "relpose: " << relative_pose.block<3, 1>(0, 3) << " - " << Eigen::Quaternionf(relative_pose.block<3, 3>(0, 0)).coeffs().transpose() << std::endl;
+
+      last_edge_accum_distance = new_keyframe->accum_distance;
+
+      return std::make_shared<Loop>(new_keyframe, best_matched, relative_pose);
+    }
+
   private:
     double distance_thresh;                // estimated distance between keyframes consisting a loop must be less than this distance
     double accum_distance_thresh;          // traveled distance between ...
@@ -295,6 +424,9 @@ namespace lv_slam
     DBoW3::Database db;
     DBoW3::Vocabulary *voc;
     std::string voc_path;
+
+    std::string label_path;
+    std::vector<std::pair<double, int>> label_frames;
   };
 }
 

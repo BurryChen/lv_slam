@@ -212,3 +212,19 @@ rosbag play --clock './src/lv_slam/data/velo_img_04.bag'    -r 1.0
     
     rosservice call /global_graph/save_map '{resolution: 0.05, destination: '/home/chenshoubin/data/ob_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_o3/map.pcd'}'
 ```
+## 8. Example dlo_lfa_ggo_semantic
+### 8.1 dlo_lfa_ggo_semantic_kitti
+```
+# realtive path
+
+# roslaunch lv_slam dlo_lfa_ggo_semantic_kitti.launch
+
+roslaunch lv_slam dlo_lfa_ggo_semantic_kitti.launch  calib_file:='$(find lv_slam)/config/kitti_calib/calib04-12.txt'     odom_file:='$(find lv_slam)/data/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/KITTI_05_odom.txt' seq:=05  lfa_output_path:='$(find lv_slam)/data/kitti_lv_dlo_lfa_ggo' label_path:="$(find lv_slam)/data/05_label.txt" 
+
+rosbag play --clock './data/velo_img_05.bag'    -r 1.0
+
+rosservice call /global_graph/dump "destination: '/home/chenshoubin/code_ws/slam_ws/data/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_05'  "
+
+rosservice call /global_graph/save_map "{resolution: 0.05, destination: '/home/chenshoubin/code_ws/slam_ws/data/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_05/map.pcd'}"
+
+```  
