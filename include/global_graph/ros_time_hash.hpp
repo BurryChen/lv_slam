@@ -9,9 +9,11 @@
 /**
  * @brief Hash calculation for ros::Time
  */
-class RosTimeHash {
+class RosTimeHash
+{
 public:
-  size_t operator() (const ros::Time& val) const {
+  size_t operator()(const ros::Time &val) const
+  {
     size_t seed = 0;
     boost::hash_combine(seed, val.sec);
     boost::hash_combine(seed, val.nsec);
