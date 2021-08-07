@@ -198,7 +198,7 @@ namespace lv_slam
     keyframe_queue.push_back(keyframe);   //关键帧队列*/
 
       // window map 作为keyframe
-      if (keyframe_updater->is_first && keyframe_updater->update(odom))
+      if (keyframe_updater->is_first && keyframe_updater->update(odom, stamp))
       {
         w_odom = odom;
         w_cloud.clear();
@@ -208,7 +208,7 @@ namespace lv_slam
         accum_d = keyframe_updater->get_accum_distance();
         //std::cout<<seq<<" start "<<cloud->size()<<" "<<w_cloud.size()<<"-----------------------------------------------------------------------"<<std::endl;
       }
-      else if (!keyframe_updater->is_first && keyframe_updater->update(odom))
+      else if (!keyframe_updater->is_first && keyframe_updater->update(odom, stamp))
       {
         pcl::VoxelGrid<PointT> voxelgrid;
         voxelgrid.setLeafSize(0.1f, 0.1f, 0.1f);
@@ -233,7 +233,7 @@ namespace lv_slam
         w_seq = seq;
         accum_d = keyframe_updater->get_accum_distance();
       }
-      else if (!keyframe_updater->is_first && !keyframe_updater->update(odom))
+      else if (!keyframe_updater->is_first && !keyframe_updater->update(odom, stamp))
       {
         std::lock_guard<std::mutex> lock(keyframe_queue_mutex);
         pcl::PointCloud<PointT>::Ptr transformed(new pcl::PointCloud<PointT>());
@@ -1092,7 +1092,7 @@ namespace lv_slam
         // pose:the pose of left camera coordinate system in the i'th frame with respect to the first(=0th) frame
         Eigen::Matrix4d data = (tf_velo2cam * pose * tf_velo2cam.inverse()).matrix();
         //std::cout<<"pose=\n"<<pose.matrix()<<std::endl;
-        pose_keyframe_ofs << boost::format("%le %le %le %le %le %le %le %le %le %le %le %le\n") % data(0, 0) % data(0, 1) % data(0, 2) % data(0, 3) % data(1, 0) % data(1, 1) % data(1, 2) % data(1, 3) % data(2, 0) % data(2, 1) % data(2, 2) % data(2, 3);
+        pose_keyframe_ofs << boost::format("%.9u %le %le %le %le %le %le %le %le %le %le %le %le\n") % keyframes[i]->stamp % data(0, 0) % data(0, 1) % data(0, 2) % data(0, 3) % data(1, 0) % data(1, 1) % data(1, 2) % data(1, 3) % data(2, 0) % data(2, 1) % data(2, 2) % data(2, 3);
       }
 
       std::ofstream pose_global_ofs(directory + "/ggo_wf_odom.txt");

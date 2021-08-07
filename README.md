@@ -228,3 +228,19 @@ rosservice call /global_graph/dump "destination: '/home/chenshoubin/code_ws/slam
 rosservice call /global_graph/save_map "{resolution: 0.05, destination: '/home/chenshoubin/code_ws/slam_ws/data/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_05/map.pcd'}"
 
 ```  
+
+### 8.2 dlo_lfa_ggo_semantic_szu
+```
+# realtive path
+
+# roslaunch lv_slam dlo_lfa_ggo_szu.launch
+
+roslaunch lv_slam dlo_lfa_ggo_szu.launch calib_file:='$(find lv_slam)/config/szu_calib/calib.txt'     odom_file:='$(find lv_slam)/data/szu_lv_dlo_lfa_ggo/dlo_lfa_global/data/szu_01_odom.txt' seq:=01  lfa_output_path:='$(find lv_slam)/data/szu_lv_dlo_lfa_ggo' label_path:="/media/chenshoubin/HD_CHEN_4T/02data/szu_data/726data/new2_2021-07-31-17-06-25_label.txt" 
+
+rosbag play --clock '/media/chenshoubin/HD_CHEN_4T/02data/szu_data/726data/new2_2021-07-31-17-06-25.bag'     /rslidar_points:=/velodyne_points    -r 0.5
+
+rosservice call /global_graph/dump "destination: '/home/chenshoubin/code_ws/slam_ws/src/lv_slam/data/szu_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_01'  "
+
+rosservice call /global_graph/save_map "{resolution: 0.05, destination: '/home/chenshoubin/code_ws/slam_ws/src/lv_slam/data/szu_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_01/map.pcd'}"
+
+```  

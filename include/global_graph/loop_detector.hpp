@@ -95,9 +95,12 @@ namespace lv_slam
         {
           fields.push_back(field); //将刚刚读取的字符串添加到向量fields中
         }
-        //std::pair<double, int> pair_label(stof(fields[0].c_str()), atoi(fields[1].c_str()));
-        label_frames.push_back(make_pair<double, int>(stof(fields[0].c_str()), atoi(fields[1].c_str())));
+        double time = stod(fields[0].c_str());
+        int label = atoi(fields[1].c_str());
+        printf("%f %d \n", time, label);
+        label_frames.push_back(make_pair(time, label));
       }
+      cout << "label_frames done!" << endl;
     }
 
     /**
@@ -333,27 +336,31 @@ namespace lv_slam
 
       std::cout << std::endl;
       std::cout << "--- loop detection ---" << std::endl;
-      std::cout << "num_candidates: " << candidate_keyframes.size() << std::endl;
+      std::cout << new_keyframe->stamp<<" 's num_candidates: " << candidate_keyframes.size() << std::endl;
       auto t1 = ros::Time::now();
 
       //set senmantic label value for new_keyframe
-      int new_keyframe_label;
+      int new_keyframe_label = 0;
       for (auto label_frame : label_frames)
       {
-        if (std::abs(new_keyframe->stamp.toSec() - label_frame.first) < 1.0)
+        if (std::abs(new_keyframe->stamp.toSec() - label_frame.first) < 0.05)
         {
           new_keyframe_label = label_frame.second;
+          std::cout << "new_keyframe_label"<< new_keyframe_label<< std::endl;
           break;
         }
       }
-
+      if (new_keyframe_label == 0)
+      {
+        candidate_keyframes.clear();
+      }
       //set senmantic label value for candidate_keyframes
       for (std::vector<KeyFrame::Ptr>::iterator it = candidate_keyframes.begin(); it != candidate_keyframes.end();)
       {
-        int candidate_label=0;
+        int candidate_label = -1;
         for (auto label_frame : label_frames)
         {
-          if (std::abs((*it)->stamp.toSec() - label_frame.first) < 1.0)
+          if (std::abs((*it)->stamp.toSec() - label_frame.first) < 0.05)
           {
             candidate_label = label_frame.second;
             break;
@@ -366,10 +373,12 @@ namespace lv_slam
         else
         {
           ++it;
+          std::cout << "(new_keyframe_label,candidate_label): ("
+                    << new_keyframe_label << "," << candidate_label << ")" << std::endl;
         }
       }
 
-      std::cout << candidate_keyframes.size() << "loop dectection for " << new_keyframe->seq << std::endl;
+      std::cout << "refined candidate_keyframes " << candidate_keyframes.size() << std::endl;
       pcl::PointCloud<PointT>::Ptr aligned(new pcl::PointCloud<PointT>());
       for (int i = 0; i < candidate_keyframes.size(); i++)
       {
