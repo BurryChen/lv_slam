@@ -156,7 +156,14 @@ rosbag play --clock './src/lv_slam/data/velo_img_04.bag'    -r 1.0
 ```
 
 ## 5. Example dlo_lfa_ggo_kylin
-### 5.1
+### 5.1 dlo_lfa_kylin
+```
+    roslaunch lv_slam dlo_lfa_kylin.launch  calib_file:='$(find lv_slam)/config/kylin_calib/calib.txt'     odom_file:='$(find lv_slam)/data/kylin_lv_dlo_lfa/dlo_lfa_global/data/kylin_02_odom.txt' seq:=k2  lfa_output_path:='$(find lv_slam)/data/kylin_lv_dlo_lfa'
+
+    rosbag play --clock  '/home/chenshoubin/data/lv_slam_kylin/selected_for_dissertation/k2_vlp16_2_imu_mynt_2020-01-09-15-54-50.bag'    /ns1/horizontal_laser_3d:=/velodyne_points    -r 1.0
+```
+
+### 5.1 dlo_lfa_ggo_kylin
 ```
     roslaunch lv_slam dlo_lfa_ggo_kylin.launch calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/kylin_calib/calib.txt'    odom_file:='/home/chenshoubin/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/kylin_02_odom.txt'    seq:=k2  lfa_output_path:='/home/chenshoubin/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo' 
     rosbag play --clock  '/home/chenshoubin/data/lv_slam_kylin/selected_for_dissertation/k2_vlp16_2_imu_mynt_2020-01-09-15-54-50.bag'    /ns1/horizontal_laser_3d:=/velodyne_points    -r 1.0

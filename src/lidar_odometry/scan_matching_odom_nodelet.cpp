@@ -131,6 +131,7 @@ private:
     fp_odom = fopen(odom_file.c_str(),"w+");
     
     scan_count=0;
+    time_sum=ros::WallDuration(0);
     key_id=0,key_interval=10;
     
     std::cout << "--- initialize_params end! ---" << std::endl;
@@ -252,7 +253,10 @@ private:
     auto t2 = ros::WallTime::now();
     std::cout << "-----t: "<< (t2 - last_t).toSec() <<std::endl;
     //last_t=t2;
-    
+
+    time_sum = time_sum + (t2 - last_t);
+    printf("OdomCount %d & avg odom time %f ms ++++++++++++++++++++++\n", scan_count, time_sum.toSec() / scan_count);
+
     return odom_velo;
   }
   
@@ -326,6 +330,7 @@ private:
   FILE *fp_odom,*fp_scan_error;
   Eigen::Matrix4d tf_velo2cam;
   ros::WallTime last_t;
+  ros::WallDuration time_sum;
   Eigen::Matrix4d guess_trans;                  //init guess for mathing
   int scan_count,key_id,key_interval;
   pcl::PointCloud<PointT>::ConstPtr filtered,key;
