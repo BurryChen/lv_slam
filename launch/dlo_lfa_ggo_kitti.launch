@@ -47,7 +47,7 @@
   <node pkg="nodelet" type="nodelet" name="scan_matching_odom_nodelet" args="load lidar_odometry/ScanMatchingOdomNodelet $(arg nodelet_manager)">
       <param name="odom_frame_id" value="odom" /> 
       <param name="calib_file" type="string" value="$(arg calib_file)" /> 
-      <param name="odom_file" type="string" value="$(arg odom_file)" /> 
+      <param name="odom_file" type="string" value="$(arg output_path)/dlo/data/KITTI_$(arg seq)_odom.txt" /> 
       <param name="keyframe_delta_trans" value="10.0" />       <!--m-->
       <param name="keyframe_delta_angle" value="0.17" />      <!--0.17=rad 10°-->
       <param name="keyframe_delta_time" value="1.0" />        <!--s,当前帧选取作为关键帧的条件-->
@@ -77,7 +77,7 @@
         <param name="to_bag" type="bool" value="false" />
         <param name="output_bag_file" type="string" value="/home/chenshoubin/data/aloam_kitti/kitti_0x_aloam.bag" /> <!-- replace with your output folder -->
         <param name="publish_delay" type="int" value="1" />
-        <param name="output_path" type="string" value="$(arg lfa_output_path)" />
+        <param name="output_path" type="string" value="$(arg output_path)" />
     </node>
 
   <!-- global_graph_nodelet -->
@@ -105,7 +105,7 @@
     <param name="accum_distance_thresh" value="100.0" />      <!-- 这里指的是当前帧累计距离（odometry）与临近帧累计距离之差，组成的环长要大于该阈值-->
     <param name="min_edge_interval" value="50.0" />          <!-- 两个环之间的间隔要大于该阈值-->
     <param name="fitness_score_thresh" value="2.0" />         <!-- 闭环帧匹配得分，连接点欧式距离error均值，分值越小越优-->
-    <param name="voc_path" value="$(find lv_slam)/config/vocab_larger.yml.gz" />
+    <param name="voc_path" value="$(find lv_slam)/config/vocab_larger.bin" />
     <!-- scan matching params -->
     <param name="registration_method" value="NDT_OMP" />       <!-- 闭环帧匹配方法-->
     <param name="ndt_resolution" value="1.0" />                 <!-- 闭环帧匹配分辨率-->

@@ -25,7 +25,7 @@
         <param name="to_bag" type="bool" value="false" />
         <param name="output_bag_file" type="string" value="/home/whu/data/aloam_kitti/kitti_0x_aloam.bag" /> <!-- replace with your output folder -->
         <param name="publish_delay" type="int" value="1" />
-        <param name="output_path" type="string" value="$(arg lfa_output_path)" />
+        <param name="output_path" type="string" value="$(arg output_path)" />
     </node>
   
   

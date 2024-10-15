@@ -124,12 +124,12 @@ Download [velo_img_04](https://drive.google.com/file/d/1PD9RHqhYCuFaXSo95ARs3ALM
 ### 4.1 dlo_lfa_kitti
 ```
 # realtive path
-roslaunch lv_slam dlo_lfa_kitti.launch  calib_file:='$(find lv_slam)/config/kitti_calib/calib04-12.txt'     odom_file:='$(find lv_slam)/data/kitti_lv_dlo_lfa/dlo_lfa_global/data/KITTI_04_odom.txt' seq:=04  lfa_output_path:='$(find lv_slam)/data/kitti_lv_dlo_lfa'
+roslaunch lv_slam dlo_lfa_kitti.launch  calib_file:='$(find lv_slam)/config/kitti_calib/calib04-12.txt'  output_path:='$(find lv_slam)/data/kitti_lv_dlo_lfa'
 rosbag play --clock './src/lv_slam/data/velo_img_04.bag'    -r 1.0
 ```
 
 ```
-    roslaunch lv_slam dlo_lfa_kitti.launch  calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/kitti_calib/calib04-12.txt'     odom_file:='/home/chenshoubin/data/lv_slam_kitti/kitti_lv_dlo_lfa/dlo_lfa_global/data/KITTI_04_odom.txt' seq:=04  lfa_output_path:='/home/chenshoubin/data/lv_slam_kitti/kitti_lv_dlo_lfa'
+    roslaunch lv_slam dlo_lfa_kitti.launch  calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/kitti_calib/calib04-12.txt'  seq:=04  output_path:='/home/chenshoubin/data/lv_slam_kitti/kitti_lv_dlo_lfa'
     rosbag play --clock '/home/chenshoubin/data/data_source_KITTI/velostereobag/velo_img_04.bag'    -r 1.0
 
     #cpp ./evaluate_odometry_seq '/home/chenshoubin/data/lv_slam_kitti/kitti_lv_dlo_lfa/aft_mapped_to_init_high_frec_file' 04
@@ -141,31 +141,31 @@ rosbag play --clock './src/lv_slam/data/velo_img_04.bag'    -r 1.0
 ### 4.2 dlo_lfa_ggo_kitti
 ```
 # realtive path
-roslaunch lv_slam dlo_lfa_ggo_kitti.launch  calib_file:='$(find lv_slam)/config/kitti_calib/calib04-12.txt'     odom_file:='$(find lv_slam)/data/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/KITTI_04_odom.txt' seq:=04  lfa_output_path:='$(find lv_slam)/data/kitti_lv_dlo_lfa_ggo'
+roslaunch lv_slam dlo_lfa_ggo_kitti.launch  calib_file:='$(find lv_slam)/config/kitti_calib/calib04-12.txt' seq:=04  output_path:='$(find lv_slam)/data/kitti_lv_dlo_lfa_ggo'
 rosbag play --clock './src/lv_slam/data/velo_img_04.bag'    -r 1.0
 ```
 
 ```
-    roslaunch lv_slam dlo_lfa_ggo_kitti.launch  calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/kitti_calib/calib04-12.txt'     odom_file:='/home/chenshoubin/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/KITTI_04_odom.txt' seq:=04  lfa_output_path:='/home/chenshoubin/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo'
+    roslaunch lv_slam dlo_lfa_ggo_kitti.launch  calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/kitti_calib/calib04-12.txt'  seq:=04  output_path:='/home/chenshoubin/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo'
     rosbag play --clock '/home/chenshoubin/data/data_source_KITTI/velostereobag/velo_img_04.bag'    -r 1.0
     
     rosservice call /global_graph/dump "destination: '/home/chenshoubin/data/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_06'  "
     rosservice call /global_graph/save_map "{resolution: 0.05, destination: '/home/chenshoubin/data/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_06/map.pcd'}"
 
-    evo_traj kitti '/home/chenshoubin/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/KITTI_04_odom.txt' '/home/chenshoubin/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/aft_mapped_to_init_high_frec_file/data/KITTI_04_odom.txt'   '/home/chenshoubin/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_04/ggo_wf_odom.txt'      --plot_mode=xz  --ref='/home/chenshoubin/data/data_source_KITTI/gt/04.txt'   -p --save_plot  '/home/chenshoubin/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_04/ggo_wf_odom.pdf'
+    evo_traj kitti '/home/chenshoubin/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo/data/KITTI_04_odom.txt' '/home/chenshoubin/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/aft_mapped_to_init_high_frec_file/data/KITTI_04_odom.txt'   '/home/chenshoubin/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_04/ggo_wf_odom.txt'      --plot_mode=xz  --ref='/home/chenshoubin/data/data_source_KITTI/gt/04.txt'   -p --save_plot  '/home/chenshoubin/data/lv_slam_kitti/kitti_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_04/ggo_wf_odom.pdf'
 ```
 
 ## 5. Example dlo_lfa_ggo_kylin
 ### 5.1 dlo_lfa_kylin
 ```
-    roslaunch lv_slam dlo_lfa_kylin.launch  calib_file:='$(find lv_slam)/config/kylin_calib/calib.txt'     odom_file:='$(find lv_slam)/data/kylin_lv_dlo_lfa/dlo_lfa_global/data/kylin_02_odom.txt' seq:=k2  lfa_output_path:='$(find lv_slam)/data/kylin_lv_dlo_lfa'
+    roslaunch lv_slam dlo_lfa_kylin.launch  calib_file:='$(find lv_slam)/config/kylin_calib/calib.txt'  seq:=k2  output_path:='$(find lv_slam)/data/kylin_lv_dlo_lfa'
 
     rosbag play --clock  '/home/chenshoubin/data/lv_slam_kylin/selected_for_dissertation/k2_vlp16_2_imu_mynt_2020-01-09-15-54-50.bag'    /ns1/horizontal_laser_3d:=/velodyne_points    -r 1.0
 ```
 
 ### 5.1 dlo_lfa_ggo_kylin
 ```
-    roslaunch lv_slam dlo_lfa_ggo_kylin.launch calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/kylin_calib/calib.txt'    odom_file:='/home/chenshoubin/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/kylin_02_odom.txt'    seq:=k2  lfa_output_path:='/home/chenshoubin/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo' 
+    roslaunch lv_slam dlo_lfa_ggo_kylin.launch calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/kylin_calib/calib.txt'   seq:=k2  output_path:='/home/chenshoubin/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo' 
     rosbag play --clock  '/home/chenshoubin/data/lv_slam_kylin/selected_for_dissertation/k2_vlp16_2_imu_mynt_2020-01-09-15-54-50.bag'    /ns1/horizontal_laser_3d:=/velodyne_points    -r 1.0
     rosservice call /global_graph/dump "destination: '/home/chenshoubin/data/lv_slam_kylin/selected_for_dissertation/kylin_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_k2'   "
 
@@ -195,13 +195,13 @@ rosbag play --clock './src/lv_slam/data/velo_img_04.bag'    -r 1.0
 ## 7. Example dlo_lfa_ggo_ob
 ### 7.1 dlo_lfa_ob
 ```
-    roslaunch lv_slam dlo_lfa_ob.launch calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/kylin_calib/calib.txt'    odom_file:='/home/chenshoubin/data/ob_lv_dlo_lfa/dlo_lfa_global/data/ob_01_odom.txt'    seq:=o1  lfa_output_path:='/home/chenshoubin/data/ob_lv_dlo_lfa'
+    roslaunch lv_slam dlo_lfa_ob.launch calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/kylin_calib/calib.txt'     seq:=o1  output_path:='/home/chenshoubin/data/ob_lv_dlo_lfa'
     
     rosbag play --clock  /home/chenshoubin/data/ob_2020-07-03-17-28-30.bag    /rslidar_points:=/velodyne_points    -r 1.0
 ```
 ### 7.2 dlo_lfa_ggo_ob
 ```
-    roslaunch lv_slam dlo_lfa_ggo_ob.launch calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/kylin_calib/calib.txt'    odom_file:='/home/chenshoubin/data/ob_lv_dlo_lfa/dlo_lfa_global/data/ob_02_odom.txt'    seq:=o2  lfa_output_path:='/home/chenshoubin/data/ob_lv_dlo_lfa'
+    roslaunch lv_slam dlo_lfa_ggo_ob.launch calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/kylin_calib/calib.txt'  seq:=o2  output_path:='/home/chenshoubin/data/ob_lv_dlo_lfa'
     
     rosbag play --clock  /home/chenshoubin/data/ob_02_rs_kinect_4_2020-08-18-16-45-02.bag    /rslidar_points:=/velodyne_points    -r 1.0
     
@@ -211,7 +211,7 @@ rosbag play --clock './src/lv_slam/data/velo_img_04.bag'    -r 1.0
 ```
 
 ```
-    roslaunch lv_slam dlo_lfa_ggo_ob.launch calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/kylin_calib/calib.txt'    odom_file:='/home/chenshoubin/data/ob_lv_dlo_lfa_ggo/dlo_lfa_global/data/ob_03_odom.txt'    seq:=o3  lfa_output_path:='/home/chenshoubin/data/ob_lv_dlo_lfa_ggo' img_topic:=/ns0/rgb/image_rect_color
+    roslaunch lv_slam dlo_lfa_ggo_ob.launch calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/kylin_calib/calib.txt'   seq:=o3  output_path:='/home/chenshoubin/data/ob_lv_dlo_lfa_ggo' img_topic:=/ns0/rgb/image_rect_color
     
     rosbag play --clock  '/media/chenshoubin/Research/data/ob_03_rs_kinect4_rect_rgbd_2020-10-27-15-36-09.bag'     /rslidar_points:=/velodyne_points    -r 1.0
 
@@ -219,3 +219,25 @@ rosbag play --clock './src/lv_slam/data/velo_img_04.bag'    -r 1.0
     
     rosservice call /global_graph/save_map '{resolution: 0.05, destination: '/home/chenshoubin/data/ob_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_o3/map.pcd'}'
 ```
+
+## 8. Example dlo_lfa_ggo_grodog
+
+
+### 8.1 dlo_lfa_grodog
+```
+    roslaunch lv_slam dlo_lfa_grodog.launch calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/grodog_calib/calib.txt'    seq:=g1  output_path:='/media/chen/Data/09data/data_gml_slam/grodog_lv_dlo_lfa_ggo'
+    
+    rosbag play --clock '/media/chen/Data/09data/data_gml_slam/grodog_7f_activeslam_2024-09-27-17-10-28.bag' /hesai/pandar:=/velodyne_points -r 1.0
+```
+### 8.2 dlo_lfa_ggo_grodog
+```
+    roslaunch lv_slam dlo_lfa_ggo_grodog.launch calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/grodog_calib/calib.txt'   seq:=g1  output_path:='/media/chen/Data/09data/data_gml_slam/grodog_lv_dlo_lfa_ggo'
+    
+    rosbag play --clock '/media/chen/Data/09data/data_gml_slam/grodog_7f_activeslam_2024-09-27-17-10-28.bag' /hesai/pandar:=/velodyne_points -r 1.0
+    
+    rosservice call /global_graph/dump "destination: '/media/chen/Data/09data/data_gml_slam/grodog_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_g1' " 
+    
+    rosservice call /global_graph/save_map '{resolution: 0.05, destination: '/media/chen/Data/09data/data_gml_slam/grodog_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_g1/map.pcd'}'
+```
+
+

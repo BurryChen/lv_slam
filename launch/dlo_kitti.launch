@@ -47,7 +47,7 @@
   <node pkg="nodelet" type="nodelet" name="scan_matching_odom_nodelet" args="load lidar_odometry/ScanMatchingOdomNodelet $(arg nodelet_manager)">
       <param name="odom_frame_id" value="odom" /> 
       <param name="calib_file" type="string" value="$(arg calib_file)" /> 
-      <param name="odom_file" type="string" value="$(arg odom_file)" /> 
+      <param name="odom_file" type="string" value="$(arg output_path)/dlo/data/KITTI_$(arg seq)_odom.txt" /> 
       <param name="keyframe_delta_trans" value="10.0" />       <!--m-->
       <param name="keyframe_delta_angle" value="0.17" />      <!--0.17=rad 10°-->
       <param name="keyframe_delta_time" value="1.0" />        <!--s,当前帧选取作为关键帧的条件-->
