@@ -222,12 +222,15 @@ rosbag play --clock './src/lv_slam/data/velo_img_04.bag'    -r 1.0
 
 ## 8. Example dlo_lfa_ggo_grodog
 
-
+Download data/xx_lv_dlo_lfa_ggo.zip, then extract and modify to result folder grodog_lv_dlo_lfa_ggo.
 ### 8.1 dlo_lfa_grodog
 ```
     roslaunch lv_slam dlo_lfa_grodog.launch calib_file:='/home/chenshoubin/slam_ws/src/lv_slam/config/grodog_calib/calib.txt'    seq:=g1  output_path:='/media/chen/Data/09data/data_gml_slam/grodog_lv_dlo_lfa_ggo'
     
     rosbag play --clock '/media/chen/Data/09data/data_gml_slam/grodog_7f_activeslam_2024-09-27-17-10-28.bag' /hesai/pandar:=/velodyne_points -r 1.0
+
+    evo_traj kitti '/media/chen/Data/09data/data_gml_slam/grodog_lv_dlo_lfa_ggo/dlo/data/KITTI_g1_odom.txt' '/media/chen/Data/09data/data_gml_slam/grodog_lv_dlo_lfa_ggo/aft_mapped_to_init_high_frec_file/data/KITTI_g1_odom.txt' --plot_mode=xyz -p --save_plot '/media/chen/Data/09data/data_gml_slam/grodog_lv_dlo_lfa_ggo/aft_mapped_to_init_high_frec_file/data/KITTI_g1_odom.pdf'
+
 ```
 ### 8.2 dlo_lfa_ggo_grodog
 ```
@@ -238,6 +241,8 @@ rosbag play --clock './src/lv_slam/data/velo_img_04.bag'    -r 1.0
     rosservice call /global_graph/dump "destination: '/media/chen/Data/09data/data_gml_slam/grodog_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_g1' " 
     
     rosservice call /global_graph/save_map '{resolution: 0.05, destination: '/media/chen/Data/09data/data_gml_slam/grodog_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_g1/map.pcd'}'
+
+    evo_traj kitti '/media/chen/Data/09data/data_gml_slam/grodog_lv_dlo_lfa_ggo/dlo/data/KITTI_g1_odom.txt' '/media/chen/Data/09data/data_gml_slam/grodog_lv_dlo_lfa_ggo/aft_mapped_to_init_high_frec_file/data/KITTI_g1_odom.txt' '/media/chen/Data/09data/data_gml_slam/grodog_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_g1/ggo_wf_odom.txt'  --plot_mode=xyz -p --save_plot '/media/chen/Data/09data/data_gml_slam/grodog_lv_dlo_lfa_ggo/dlo_lfa_global/data/dump_g1/ggo_wf_odom.pdf'
 ```
 
 
