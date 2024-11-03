@@ -37,17 +37,17 @@
     <param name="base_link_frame" value="base_link" />
     <!-- distance filter --> <!--距离滤波-->
     <param name="use_distance_filter" value="true" />
-    <param name="distance_near_thresh" value="0.5" />
+    <param name="distance_near_thresh" value="0.2" />
     <param name="distance_far_thresh" value="100.0" />
     <!-- NONE, VOXELGRID, or APPROX_VOXELGRID -->
     <!--采取不同下采样的方法,VOXELGRID重心，APPROX_VOXELGRID几何中心 -->
-    <param name="downsample_method" value="VOXELGRID" /> 
+    <param name="downsample_method" value="NONE" /> 
     <param name="downsample_resolution" value="0.1" />
     <!-- NONE, RADIUS, or STATISTICAL --> <!--外点过滤-->
-    <param name="outlier_removal_method" value="RADIUS" />
+    <param name="outlier_removal_method" value="NONE" />
     <param name="statistical_mean_k" value="30" />   <!--统计的方式过滤外点，周围的neighbor数目最小30-->
     <param name="statistical_stddev" value="1.2" />  <!--统计的方式过滤外点，设置判断是否为离群点的阈值-->
-    <param name="radius_radius" value="1" />       <!--以半径为0.5米的方式进行统计-->
+    <param name="radius_radius" value="0.5" />       <!--以半径为0.5米的方式进行统计-->
     <param name="radius_min_neighbors" value="5" />  <!--统计的邻居的最小数目为5-->
     <param name="use_angle_calibration" value="false" />
   </node>
@@ -57,9 +57,9 @@
       <param name="odom_frame_id" value="odom" /> 
       <param name="calib_file" type="string" value="$(arg calib_file)" /> 
       <param name="odom_file" type="string" value="$(arg output_path)/dlo/data/KITTI_$(arg seq)_odom.txt" /> 
-      <param name="keyframe_delta_trans" value="0.1" />       <!--m-->
-      <param name="keyframe_delta_angle" value="0.06" />      <!--0.17=rad 10°-->
-      <param name="keyframe_delta_time" value="0.5" />        <!--s,当前帧选取作为关键帧的条件-->
+      <param name="keyframe_delta_trans" value="2.0" />       <!--m-->
+      <param name="keyframe_delta_angle" value="0.34" />      <!--0.17=rad 10°-->
+      <param name="keyframe_delta_time" value="2.0" />        <!--s,当前帧选取作为关键帧的条件-->
   </node>
 
   <!-- lfa -->  
@@ -90,11 +90,11 @@
     </node>
     <!---->
 
-  <node pkg="lv_slam" type="map2odom_publisher.py" name="map2odom_publisher" />
-  
+  <node pkg="lv_slam" type="map2odom_publisher.py" name="map2odom_publisher" />  
+
   <!-- -->
   <group if="$(arg rviz)">
-    <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find lv_slam)/rviz/global_graph.rviz" />
+    <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find lv_slam)/rviz/grodog_dlo.rviz" />
   </group>
   
    

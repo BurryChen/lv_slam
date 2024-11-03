@@ -37,17 +37,17 @@
     <param name="base_link_frame" value="base_link" />
     <!-- distance filter --> <!--距离滤波-->
     <param name="use_distance_filter" value="true" />
-    <param name="distance_near_thresh" value="0.5" />
+    <param name="distance_near_thresh" value="0.2" />
     <param name="distance_far_thresh" value="100.0" />
     <!-- NONE, VOXELGRID, or APPROX_VOXELGRID -->
     <!--采取不同下采样的方法,VOXELGRID重心，APPROX_VOXELGRID几何中心 -->
-    <param name="downsample_method" value="VOXELGRID" /> 
+    <param name="downsample_method" value="NONE" /> 
     <param name="downsample_resolution" value="0.1" />
     <!-- NONE, RADIUS, or STATISTICAL --> <!--外点过滤-->
-    <param name="outlier_removal_method" value="RADIUS" />
+    <param name="outlier_removal_method" value="NONE" />
     <param name="statistical_mean_k" value="30" />   <!--统计的方式过滤外点，周围的neighbor数目最小30-->
     <param name="statistical_stddev" value="1.2" />  <!--统计的方式过滤外点，设置判断是否为离群点的阈值-->
-    <param name="radius_radius" value="1" />       <!--以半径为0.5米的方式进行统计-->
+    <param name="radius_radius" value="0.5" />       <!--以半径为0.5米的方式进行统计-->
     <param name="radius_min_neighbors" value="5" />  <!--统计的邻居的最小数目为5-->
     <param name="use_angle_calibration" value="false" />
   </node>
@@ -57,9 +57,9 @@
       <param name="odom_frame_id" value="odom" /> 
       <param name="calib_file" type="string" value="$(arg calib_file)" /> 
       <param name="odom_file" type="string" value="$(arg output_path)/dlo/data/KITTI_$(arg seq)_odom.txt" /> 
-      <param name="keyframe_delta_trans" value="0.1" />       <!--m-->
-      <param name="keyframe_delta_angle" value="0.06" />      <!--0.17=rad 10°-->
-      <param name="keyframe_delta_time" value="0.5" />        <!--s,当前帧选取作为关键帧的条件-->
+      <param name="keyframe_delta_trans" value="2.0" />       <!--m-->
+      <param name="keyframe_delta_angle" value="0.34" />      <!--0.17=rad 10°-->
+      <param name="keyframe_delta_time" value="2.0" />        <!--s,当前帧选取作为关键帧的条件-->
   </node>
 
   <!-- lfa -->  
@@ -98,7 +98,7 @@
     <!-- topic settings -->
     <param name="odom_topic" type="string" value="/aft_mapped_to_init_high_frec" />    <!--dlo-ggo /odom;dlo-lfa-ggo /aft_mapped_to_init_high_frec-->
     <!--kitti /camera/left/image_raw;kylin /mynteye/left/image_color;szu:/h1/huarui_cam_node/image_raw-->
-    <param name="img_topic" type="string" value="/camera/color/image_raw" />   <!-- 2024-08-29 jq:/h1/huarui_cam_node/image_raw改/camera/color/image_raw -->
+    <param name="img_topic" type="string" value="/gemini2xl/camera/color/image_raw" />   <!-- 2024-08-29 jq:/h1/huarui_cam_node/image_raw改/camera/color/image_raw -->
     <!-- frame settings -->
     <param name="map_frame_id" value="map" />
     <param name="odom_frame_id" value="odom" />
@@ -111,7 +111,7 @@
     <param name="enable_imu_acceleration" value="$(arg enable_imu_acc)" />
     <param name="enable_imu_orientation" value="$(arg enable_imu_ori)" />
     <param name="keyframe_delta_trans" value="2.0" />     <!--和pre keyframe 平移量小于该阈值，跳过，不加入keyframe_queue;-->
-    <param name="keyframe_delta_angle" value="0.17" />      <!--和pre keyframe 旋转量小于该阈值，跳过，不加入keyframe_queue;二者同时满足才跳过，1个不满足就加入keyframe_queue--> 
+    <param name="keyframe_delta_angle" value="0.34" />      <!--和pre keyframe 旋转量小于该阈值，跳过，不加入keyframe_queue;二者同时满足才跳过，1个不满足就加入keyframe_queue--> 
     <!-- loop closure params -->
     <param name="distance_thresh" value="5.0" />             <!--小于该阈值范围内两个关键帧为潜在闭环帧，将所有满足条件的都存起来作为candidate，搜索区域-->
     <param name="accum_distance_thresh" value="10.0" />      <!-- 这里指的是当前帧累计距离（odometry）与临近帧累计距离之差，组成的环长要大于该阈值-->
